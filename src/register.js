@@ -3,10 +3,10 @@ import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
 import {useNavigate } from "react-router-dom";
 import logo from './AccoliteLogo.png';
 import './login.css'
-import { SlackLoginButton,FacebookLoginButton, GoogleLoginButton,LinkedInLoginButton } from "react-social-login-buttons";
 
 
-const Login = () => {
+const Register = () => {
+    let history=useNavigate ();
     const renderForm = (
       <div className="form">
         <form>
@@ -29,20 +29,13 @@ const Login = () => {
       <div className="login-form">
       <img src={logo} alt="Logo" />
 
-        <div className="title">Sign In</div>
+        <div className="title">Sign Up</div>
        {renderForm}
-       <label>Or </label>
-       <GoogleLoginButton onClick={() => alert("Google Login")} />
-
-       <FacebookLoginButton onClick={() => alert("FB Login")} />
-       <SlackLoginButton onClick={() => alert('Hello')} />
-
-
       </div>
-      Don't have an account? <Link to="/register">Register here!</Link>
+      Already have an account? <Link to="/login">Login here!</Link>
 
     </div>
     );
 }
 
-export default Login;
+export default Register;

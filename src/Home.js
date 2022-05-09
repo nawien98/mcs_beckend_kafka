@@ -9,11 +9,14 @@ import logo from './AccoliteLogo.png';
     
     return (
       <div className="app">
+        <div className="img">
               <img src={logo} alt="Logo" />
-
-      <div className="login-form">
-        <div>
-          <h1>Microservices Accelerator</h1>
+              </div>
+              <div className="headingHome">
+              <h1>Microservices Accelerator</h1>
+              </div>
+      <div className="loginform">
+          
           <div className="form">
            <form>
            <div className="input-container">
@@ -57,12 +60,70 @@ import logo from './AccoliteLogo.png';
 
                     </select>
     </label>
+    <label>Orchestration : 
+  <select defaultValue="Select Orchestration">
+  <option defaultValue>Select Orchestration</option>
+                        <option value="Kubernetes">Kubernetes</option>
+                    </select>
+    </label>
+    <label>Security : 
+  <select defaultValue="Select Security">
+  <option defaultValue>Select Security</option>
+                        <option value="SpringSecurity">Spring Security</option>
+                        <option value="MicronautSecurity">Micronaut Security</option>
+                        <option value="QuarkusSecurity">Quarkus Security</option>
+
+                    </select>
+    </label>
+    <label>Authentication : 
+  <select defaultValue="Select Authentication">
+  <option defaultValue>Select Authentication</option>
+                        <option value="JWT">JWT</option>
+                        <option value="OAuth">OAuth</option>
+
+                    </select>
+    </label>
+    <label>Tracing : 
+  <select defaultValue="Select Tracing">
+  <option defaultValue>Select Tracing</option>
+                        <option value="OpenTracing">OpenTracing</option>
+                    </select>
+    </label>
+    <label>Monitoring : 
+  <select defaultValue="Select Monitoring">
+  <option defaultValue>Select Monitoring</option>
+                        <option value="Grafana">Grafana</option>
+                    </select>
+    </label>
+    <label>Logging : 
+  <select defaultValue="Select Logging">
+  <option defaultValue>Select Logging</option>
+                        <option value="Slf4j">Slf4j</option>
+                        <option value="Logstash">Logstash</option>
+
+                    </select>
+    </label>
+    <label>Databases  :
+  <select defaultValue="Select Databases">
+  <option defaultValue>Select Databases</option>
+
+                        <option value="Oracle">Oracle</option>
+                        <option value="MySQL">MySQL</option>
+                        <option value="MongoDB">MongoDB</option>
+                        <option value="SQLServer">SQLServer</option>
+                        <option value="Postgres">Postgres</option>
+                    </select>
+    </label>
+
+
+
+
+
 </div>
 <div className="button-container">
   <input type="submit" value="Submit" /></div>
 </form>
 </div>
-      </div>
       </div></div>
     );
   }
