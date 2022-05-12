@@ -33,9 +33,9 @@ OR  use mvnw command directly
 
 Step3: Use `curl` to call API
 ```bash
-curl -X GET http://localhost:8080/
+curl -X POST -H "Content-Type: application/json" -d '{"groupId" : "org.acme", "artifactId":"getting-started", "extensions":"resteasy-reactive,quarkus-jdbc-mysql,smallrye-openapi,quarkus-resteasy-jackson"}' "http://localhost:8080/api/v1/ms-accelerator/generate"
 ```
-
+Swagger: http://localhost:8080/swagger-ui
 
 ### Packaging and running the application
 
