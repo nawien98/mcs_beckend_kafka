@@ -1,7 +1,9 @@
 package org.accolite.controller;
 
-import org.accolite.User;
+import org.accolite.service.GreetingService;
+import org.accolite.model.User;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -11,6 +13,9 @@ import javax.ws.rs.core.Response;
 
 @Path("/hello")
 public class GreetingResource {
+
+    @Inject
+    GreetingService service;
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
@@ -23,7 +28,9 @@ public class GreetingResource {
     @Path("/greeting/{id}")
     public Response greetingUser(@PathParam("id") int id) {
         User u = User.findById(id);
-        String message = "{\"msg\": \"Hello, "+u.name+"\"}";
+        String message = "{" +
+                "\"msg\": \""+service.greeting(u.name)+
+                "\"}";
         return Response.ok(message).build();
     }
 }

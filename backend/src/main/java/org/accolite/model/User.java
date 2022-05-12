@@ -1,4 +1,4 @@
-package org.accolite;
+package org.accolite.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 

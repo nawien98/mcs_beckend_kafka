@@ -9,8 +9,13 @@ docker-down: ## Stop docker containers and clear artefacts.
 
 
 .PHONY: run
-run: ## run application
+run: packaging## run application
 	./mvnw quarkus:dev
+
+.PHONY: packaging
+packaging: ## Packaging and run the application
+	./mvnw clean package
+
 
 .PHONY: clean
 ## clean: cleans temp

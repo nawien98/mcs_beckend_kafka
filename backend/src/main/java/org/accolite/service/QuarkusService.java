@@ -1,26 +1,26 @@
 package org.accolite.service;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.*;
-import java.util.Properties;
 
+@ApplicationScoped
 public class QuarkusService {
 
     public static void main(String[] args) throws IOException {
-        generateProject();
+        generateProjectService();
     }
 
-    public static void generateProject() throws IOException {
+    public static void generateProjectService() throws IOException {
         String targetPath = getPath();
         String[] commands = new String[] {
                 "mvn",
                 "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
                 "-DprojectGroupId=org.acme",
                 "-DprojectArtifactId=getting-started",
-                "-Dextensions=resteasy-reactive,quarkus-jdbc-mysql",
+                "-Dextensions=resteasy-reactive,quarkus-jdbc-mysql,smallrye-openapi,quarkus-resteasy-jackson",
         };
 
         try {
@@ -40,7 +40,6 @@ public class QuarkusService {
 
     public static String getPath(){
         String command = "pwd";
-
         try {
             Process process = Runtime.getRuntime().exec(command);
             BufferedReader reader = new BufferedReader(
@@ -55,6 +54,4 @@ public class QuarkusService {
         }
         return "";
     }
-
-
 }
