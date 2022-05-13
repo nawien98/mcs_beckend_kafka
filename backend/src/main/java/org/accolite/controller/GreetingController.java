@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/hello")
-public class GreetingResource {
+public class GreetingController {
 
     @Inject
     GreetingService service;
@@ -23,14 +23,14 @@ public class GreetingResource {
         return "Hello from RESTEasy Reactive";
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/greeting/{id}")
-    public Response greetingUser(@PathParam("id") int id) {
-        User u = User.findById(id);
-        String message = "{" +
-                "\"msg\": \""+service.greeting(u.name)+
-                "\"}";
-        return Response.ok(message).build();
-    }
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    @Path("/greeting/{id}")
+//    public Response greetingUser(@PathParam("id") int id) {
+//        User u = User.findById(id);
+//        String message = "{" +
+//                "\"msg\": \""+service.greeting(u.name)+
+//                "\"}";
+//        return Response.ok(message).build();
+//    }
 }

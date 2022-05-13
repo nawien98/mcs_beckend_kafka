@@ -30,6 +30,6 @@ public class GenerateController {
         if(!result){
             return Response.status(RestResponse.Status.BAD_REQUEST).entity("{"+"\"msg\": \""+"Build failure"+"\"}").build();
         }
-        return Response.ok(task).build();
+        return Response.ok("{"+"\"msg\": \""+"Build success"+"\"}").build();
     }
 }

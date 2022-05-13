@@ -1,29 +1,30 @@
 version: '3.7'
 
 services:
-  docker-mysql:
+#  app:
+##    depends_on:
+##       - mysql
+#    build:
+#      context: .
+#      dockerfile: src/main/docker/Dockerfile.jvm
+#    restart: on-failure
+##    links:
+##      - mysql
+#    ports:
+#      - 8080:8080
+
+  mysql:
     platform: linux/amd64
     image: mysql:5.7
     restart: unless-stopped
-    container_name: javadockerDB
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: database
-#      MYSQL_USER: root
-#      MYSQL_PASSWORD: password
     ports:
       - 3306:3306
     volumes:
       - "./src/main/docker/mysql/dump.sql:/docker-entrypoint-initdb.d/dump.sql"
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: src/main/docker/Dockerfile.jvm
-#    restart: unless-stopped
-#    depends_on:
-#      - docker-mysql
-#    ports:
-#      - 8080:8080
 
 
