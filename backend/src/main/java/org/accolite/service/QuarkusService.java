@@ -80,4 +80,9 @@ public class QuarkusService {
         }
         return true;
     }
+
+    public boolean copyTemplate(String folder, Task task) {
+        return true;
+    }
+
 }
