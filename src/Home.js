@@ -3,6 +3,7 @@ import {useNavigate } from "react-router-dom";
 import { browserHistory } from "react-router";
 import './Home.css'
 import logo from './AccoliteLogo.png';
+import { useAuth } from "./context/AuthContext";
 
 
   function Home() {

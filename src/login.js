@@ -1,22 +1,50 @@
-import React, {useState} from "react";
+import React, {useState, useRef} from "react";
 import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
 import {useNavigate } from "react-router-dom";
 import logo from './AccoliteLogo.png';
 import './login.css'
-import { SlackLoginButton,FacebookLoginButton, GoogleLoginButton,LinkedInLoginButton } from "react-social-login-buttons";
+import { SlackLoginButton,FacebookLoginButton, GoogleLoginButton } from "react-social-login-buttons";
+import { useAuth } from "./context/AuthContext";
 
 
 const Login = () => {
+
+  const emailRef = useRef()
+  const passwordRef = useRef()
+  const { login } = useAuth()
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const history = useNavigate()
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+
+    try {
+      setError("")
+      setLoading(true)
+      await login(emailRef.current.value, passwordRef.current.value)
+      history('/home')
+
+    } catch {
+      setError("Failed to log in")
+    }
+
+    setLoading(false)
+  }
+
+
+
+
     const renderForm = (
       <div className="form">
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className="input-container">
-            <label>Username </label>
-            <input type="text" name="uname" required />
+            <label>Email </label>
+            <input type="text" name="uname" ref={emailRef} required />
           </div>
           <div className="input-container">
             <label>Password </label>
-            <input type="password" name="pass" required />
+            <input type="password" name="pass" ref={passwordRef} required />
           </div>
           <div className="button-container">
             <input type="submit" />
