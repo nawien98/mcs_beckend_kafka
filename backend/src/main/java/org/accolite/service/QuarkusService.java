@@ -6,11 +6,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import org.apache.commons.io.FileUtils;
 
 @ApplicationScoped
@@ -18,15 +17,56 @@ public class QuarkusService {
     private static final Logger logger = LoggerFactory.getLogger(QuarkusService.class);
 
     public boolean generateProjectService(Task task){
+//        boolean result = true;
+//        String targetPath = getPath("root",task);
+//        logger.info("[generateProjectService] request: {}",task);
+//        String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
+//        String[] commands = new String[] {
+//                "mvn",
+//                "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
+//                "-DprojectGroupId="+task.getGroupId(),
+//                "-DprojectArtifactId="+task.getArtifactId(),
+//                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+extensions,
+//        };
+//
+//        try {
+//            Process process = Runtime.getRuntime().exec(commands, null, new File(targetPath));
+//            BufferedReader reader = new BufferedReader(
+//                    new InputStreamReader(process.getInputStream()));
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                System.out.println(line);
+//                if (line.contains("BUILD FAILURE")){
+//                    result = false;
+//                }
+//            }
+            boolean result = createCommand(task);
+            try{
+            if (result){
+                copyMvcTemplate(task);
+                copyDockerTemplate(task);
+                //TODO: replace package name function
+                compressToZip(task);
+            }
+//            reader.close();
+//
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public boolean createCommand(Task task) {
         boolean result = true;
         String targetPath = getPath("root",task);
         logger.info("[generateProjectService] request: {}",task);
+        String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
         String[] commands = new String[] {
                 "mvn",
                 "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
                 "-DprojectGroupId="+task.getGroupId(),
                 "-DprojectArtifactId="+task.getArtifactId(),
-                "-Dextensions="+task.getExtensions().replace("\\s+", ""),
+                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+extensions,
         };
 
         try {
@@ -36,25 +76,17 @@ public class QuarkusService {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
-                if (line.contains("BUILD FAILURE")){
+                if (line.contains("BUILD FAILURE")) {
                     result = false;
                 }
             }
-            //copy file
-            if (result){
-//                result = mkdirMVC(targetPath,task);
-                copyMvcTemplate(task);
-                copyDockerTemplate(task);
-
-            }
-
             reader.close();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
         return result;
     }
+
 
     public String getPath(String folderLayer, Task task) {
         try {
@@ -98,6 +130,18 @@ public class QuarkusService {
         copyDirectory(sourceDirectory,destinationDirectory, task);
 //            FileUtils.copyDirectory(sourceDirectory, destinationDirectory);
     }
+
+    public void compressToZip(Task task ) throws IOException {
+        String targetPath = getPath("root",task);
+        FileOutputStream fos = new FileOutputStream(targetPath+"/"+task.getArtifactId()+".zip");
+        ZipOutputStream zipOut = new ZipOutputStream(fos);
+        File fileToZip = new File(targetPath+"/"+task.getArtifactId());
+
+        zipFile(fileToZip, fileToZip.getName(), zipOut);
+        zipOut.close();
+        fos.close();
+    }
+
 
     private static void copyDirectory(File sourceDir, File destDir, Task task) throws IOException {
         if (!destDir.exists()) {
@@ -154,4 +198,33 @@ public class QuarkusService {
                 input.close();
                 output.close();
             }
+
+    private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
+        if (fileToZip.isHidden()) {
+            return;
+        }
+        if (fileToZip.isDirectory()) {
+            if (fileName.endsWith("/")) {
+                zipOut.putNextEntry(new ZipEntry(fileName));
+                zipOut.closeEntry();
+            } else {
+                zipOut.putNextEntry(new ZipEntry(fileName + "/"));
+                zipOut.closeEntry();
+            }
+            File[] children = fileToZip.listFiles();
+            for (File childFile : children) {
+                zipFile(childFile, fileName + "/" + childFile.getName(), zipOut);
+            }
+            return;
+        }
+        FileInputStream fis = new FileInputStream(fileToZip);
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipOut.putNextEntry(zipEntry);
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+        fis.close();
+    }
 }

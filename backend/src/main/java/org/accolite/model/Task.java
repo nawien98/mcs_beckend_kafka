@@ -16,5 +16,5 @@ import javax.persistence.Table;
 public class Task {
     String groupId;
     String artifactId;
-    String extensions;
+    String[] extensions;
 }
