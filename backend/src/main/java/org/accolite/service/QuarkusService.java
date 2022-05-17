@@ -17,39 +17,14 @@ public class QuarkusService {
     private static final Logger logger = LoggerFactory.getLogger(QuarkusService.class);
 
     public boolean generateProjectService(Task task){
-//        boolean result = true;
-//        String targetPath = getPath("root",task);
-//        logger.info("[generateProjectService] request: {}",task);
-//        String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
-//        String[] commands = new String[] {
-//                "mvn",
-//                "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
-//                "-DprojectGroupId="+task.getGroupId(),
-//                "-DprojectArtifactId="+task.getArtifactId(),
-//                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+extensions,
-//        };
-//
-//        try {
-//            Process process = Runtime.getRuntime().exec(commands, null, new File(targetPath));
-//            BufferedReader reader = new BufferedReader(
-//                    new InputStreamReader(process.getInputStream()));
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                System.out.println(line);
-//                if (line.contains("BUILD FAILURE")){
-//                    result = false;
-//                }
-//            }
-            boolean result = createCommand(task);
-            try{
+        boolean result = createCommand(task);
+        try{
             if (result){
                 copyMvcTemplate(task);
                 copyDockerTemplate(task);
                 //TODO: replace package name function
                 compressToZip(task);
             }
-//            reader.close();
-//
         } catch (IOException e) {
             e.printStackTrace();
         }
