@@ -23,6 +23,7 @@ public class GenerateController {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Path("/v1/ms-accelerator/generate")
     public Response generate(Task task){
         logger.info("[GenerateController] Request info: {}", task);

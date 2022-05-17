@@ -1,22 +1,25 @@
 package org.accolite.service;
 
-import org.accolite.controller.GenerateController;
 import org.accolite.model.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 
 @ApplicationScoped
 public class QuarkusService {
     private static final Logger logger = LoggerFactory.getLogger(QuarkusService.class);
+
     public boolean generateProjectService(Task task){
         boolean result = true;
-        String targetPath = getPath();
+        String targetPath = getPath("root",task);
         logger.info("[generateProjectService] request: {}",task);
         String[] commands = new String[] {
                 "mvn",
@@ -37,8 +40,12 @@ public class QuarkusService {
                     result = false;
                 }
             }
+            //copy file
             if (result){
-                result = mkdirMVC(targetPath,task);
+//                result = mkdirMVC(targetPath,task);
+                copyMvcTemplate(task);
+                copyDockerTemplate(task);
+
             }
 
             reader.close();
@@ -49,40 +56,102 @@ public class QuarkusService {
         return result;
     }
 
-    public String getPath(){
-        String command = "pwd";
+    public String getPath(String folderLayer, Task task) {
         try {
-            Process process = Runtime.getRuntime().exec(command);
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
-            String line;
-            if ((line = reader.readLine()) != null){
-                return line +"/temp";
+            String currentPath = new java.io.File(".").getCanonicalPath();
+            switch (folderLayer) {
+                case "root":
+                    return currentPath + "/temp";
+                case "mvc":
+                    return currentPath + "/temp/" + task.getArtifactId() + "/src/main/java/" + task.getGroupId().replace(".", "/");
+                case "docker":
+                    return currentPath + "/temp/" + task.getArtifactId() + "/src/main/docker";
+                case "template":
+                    return currentPath + "/template";
+                default:
+                    break;
             }
-            reader.close();
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return "";
     }
 
-    public boolean mkdirMVC(String path, Task task) {
-        String[] commands = new String[] {
-                "mkdir", "controller" ,"model", "service"
-        };
-        String targetPath = path+"/"+task.getArtifactId()+"/src/main/java/"+task.getGroupId().replace(".","/");
-        logger.info("[generateProjectService - mkdirMVC] mkdir path: {}",targetPath);
-        try {
-        Runtime.getRuntime().exec(commands, null, new File(targetPath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+    public void copyMvcTemplate(Task task) throws IOException {
+        String source = getPath("template",task);
+        String destination = getPath("mvc",task);
+        logger.info("[copyMvcTemplate] copy path: {}{}", source, destination);
+        String[] list = {"controller","model","service"};
+        for (String subfolder:list) {
+           File sourceDirectory = new File(source,subfolder);
+           File destinationDirectory = new File(destination,subfolder);
+           copyDirectory(sourceDirectory,destinationDirectory, task);
         }
-        return true;
     }
 
-    public boolean copyTemplate(String folder, Task task) {
-        return true;
+    public void copyDockerTemplate(Task task) throws IOException {
+        String source = getPath("template",task);
+        String destination = getPath("docker",task);
+        File sourceDirectory = new File(source,"mysql");
+        File destinationDirectory = new File(destination,"mysql");
+        logger.info("[copyDockerTemplate] copy path: {}{}", sourceDirectory, destinationDirectory);
+        copyDirectory(sourceDirectory,destinationDirectory, task);
+//            FileUtils.copyDirectory(sourceDirectory, destinationDirectory);
     }
 
+    private static void copyDirectory(File sourceDir, File destDir, Task task) throws IOException {
+        if (!destDir.exists()) {
+            destDir.mkdir();
+        }
+
+        for (String f : sourceDir.list()) {
+            File source = new File(sourceDir, f);
+            File destination = new File(destDir, f);
+
+            if (source.isDirectory()) {
+                copyDirectory(source, destination, task);
+            } else {
+                copyFile(source, destination, task);
+            }
+        }
+    }
+
+    private static void copyFile(File sourceFile, File destinationFile, Task task) throws IOException {
+        FileInputStream input = new FileInputStream(sourceFile);
+        FileOutputStream output = new FileOutputStream(destinationFile);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+
+//        if(!task.getGroupId().equals("org.accolite")){
+//            String text = new String(buf, StandardCharsets.UTF_8);
+//            text = text.replace("org.accolite", task.getGroupId());
+//            buf = text.getBytes();
+//        }
+
+//            if (text.contains("org.accolite")) {
+//            text = text.replace("org.accolite", task.getGroupId());
+//            buf=text.getBytes(StandardCharsets.UTF_8);
+//            logger.info("input content {}",text);
+//            }
+
+            while ((bytesRead = input.read(buf)) != -1){
+//                String text = new String(buf, StandardCharsets.UTF_8);
+//                logger.info("input content before {} ", bytesRead);
+//                if (text.contains("org.accolite")) {
+//                    text = text.replace("org.accolite", task.getGroupId());
+//                    byte[] newBuf = text.getBytes();
+//                    int newBytesRead = input.read(text.getBytes());
+//                     logger.info("input content{} {}",bytesRead, text);
+//                    logger.info("input content after {} ", bytesRead);
+//                    output.write(text.getBytes());
+//
+//                } else {
+                    output.write(buf, 0, bytesRead);
+//                output.write(buf);
+
+//                }
+            }
+                input.close();
+                output.close();
+            }
 }

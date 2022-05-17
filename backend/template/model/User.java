@@ -1,9 +1,8 @@
-package org.default.model;
+package org.accolite.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 import javax.persistence.*;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")

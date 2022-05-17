@@ -18,13 +18,13 @@ public class UserController {
     @Inject
     UserService service;
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/health")
-    public Response health() {
-        logger.info("[UserController] Server health check");
-        return Response.ok("ok").build();
-    }
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    @Path("/health")
+//    public Response health() {
+//        logger.info("[UserController] Server health check");
+//        return Response.ok("ok").build();
+//    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

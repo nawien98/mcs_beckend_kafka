@@ -7,4 +7,3 @@ CREATE TABLE `users` (
 
 insert into users(name) values("Boris");
 insert into users(name) values("Mary");
-

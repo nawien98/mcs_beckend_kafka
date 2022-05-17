@@ -12,11 +12,12 @@ import javax.ws.rs.core.Response;
 @Path("/api")
 public class ServiceController {
     private static final Logger logger = LoggerFactory.getLogger(ServiceController.class);
-//    @GET
+    @GET
 //    @Produces(MediaType.APPLICATION_JSON)
-//    @Path("/health")
-//    public Response health() {
-//        logger.info("Server health check");
-//        return Response.ok("ok").build();
-//    }
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/health")
+    public Response health() {
+        logger.info("Server health check");
+        return Response.ok("ok").build();
+    }
 }

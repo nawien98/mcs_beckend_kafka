@@ -1,5 +1,5 @@
-package org.default.service;
-import org.default.model.User;
+package org.accolite.service;
+import org.accolite.model.User;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,5 @@ public class UserService {
         User.persist(user);
         return true;
     }
-
 
 }

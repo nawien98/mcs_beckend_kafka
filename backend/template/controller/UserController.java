@@ -1,5 +1,5 @@
-package org.default.controller;
-import org.default.model.User;
+package org.accolite.controller;
+import org.accolite.model.User;
 import org.accolite.service.UserService;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.slf4j.Logger;
