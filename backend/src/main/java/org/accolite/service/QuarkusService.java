@@ -1,28 +1,30 @@
 package org.accolite.service;
 
 import org.accolite.model.Task;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.*;
 import java.util.Arrays;
+import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import org.apache.commons.io.FileUtils;
 
 @ApplicationScoped
 public class QuarkusService {
     private static final Logger logger = LoggerFactory.getLogger(QuarkusService.class);
 
-    public boolean generateProjectService(Task task){
+    public boolean generateQuarkusService(Task task){
         boolean result = createCommand(task);
+
         try{
             if (result){
                 copyMvcTemplate(task);
                 copyDockerTemplate(task);
-                //TODO: replace package name function
+//                writeSQLconfig(task);
+                copyReadme(task);
                 compressToZip(task);
             }
         } catch (IOException e) {
@@ -36,12 +38,16 @@ public class QuarkusService {
         String targetPath = getPath("root",task);
         logger.info("[generateProjectService] request: {}",task);
         String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
+
+        String database = ConfigProvider.getConfig().getValue("quarkus."+task.getDatabase(), String.class);
+        logger.info("[test get env] mysql {}",database);
         String[] commands = new String[] {
                 "mvn",
                 "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
                 "-DprojectGroupId="+task.getGroupId(),
                 "-DprojectArtifactId="+task.getArtifactId(),
-                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+extensions,
+                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
+                "-DbuildTool="+task.getBuild(),
         };
 
         try {
@@ -62,6 +68,31 @@ public class QuarkusService {
         return result;
     }
 
+    public void updatePackageName(Task task){
+        String str = "Append OutputStream Example \n";
+        File textFile = new File("TextFile.txt");
+        FileOutputStream fileOutputStream = null;
+        try {
+        //Create FileOutputStream with append flag as true
+            fileOutputStream = new FileOutputStream(textFile, true);
+
+        // Writes bytes to the stream
+            fileOutputStream.write(str.getBytes());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // close the stream
+            try {
+                if (fileOutputStream != null) {
+                    fileOutputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public String getPath(String folderLayer, Task task) {
         try {
@@ -103,20 +134,26 @@ public class QuarkusService {
         File destinationDirectory = new File(destination,"mysql");
         logger.info("[copyDockerTemplate] copy path: {}{}", sourceDirectory, destinationDirectory);
         copyDirectory(sourceDirectory,destinationDirectory, task);
-//            FileUtils.copyDirectory(sourceDirectory, destinationDirectory);
+    }
+
+    public void copyReadme(Task task) throws IOException {
+        String source = getPath("template",task);
+        String destination = getPath("temp",task);
+        File sourceDirectory = new File(source+"/"+"README.md");
+        File destinationDirectory = new File(destination,task.getArtifactId());
+        copyFile2(sourceDirectory,destinationDirectory,task);
     }
 
     public void compressToZip(Task task ) throws IOException {
-        String targetPath = getPath("root",task);
-        FileOutputStream fos = new FileOutputStream(targetPath+"/"+task.getArtifactId()+".zip");
+        String source = getPath("root",task);
+        FileOutputStream fos = new FileOutputStream(source+"/"+task.getArtifactId()+".zip");
         ZipOutputStream zipOut = new ZipOutputStream(fos);
-        File fileToZip = new File(targetPath+"/"+task.getArtifactId());
-
+        File fileToZip = new File(source+"/"+task.getArtifactId());
+        logger.info("[compressToZip] zip path: {} {}", source, fos);
         zipFile(fileToZip, fileToZip.getName(), zipOut);
         zipOut.close();
         fos.close();
     }
-
 
     private static void copyDirectory(File sourceDir, File destDir, Task task) throws IOException {
         if (!destDir.exists()) {
@@ -130,9 +167,36 @@ public class QuarkusService {
             if (source.isDirectory()) {
                 copyDirectory(source, destination, task);
             } else {
-                copyFile(source, destination, task);
+                copyFile2(source, destination, task);
             }
         }
+    }
+
+    private void writeSQLconfig(Task task) throws IOException {
+        String sourceFile = getPath("template/sqlConfig.yaml",task);
+        String destFile = getPath("root",task);
+        File destinationFile = new File(destFile+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
+
+        Scanner scan= new Scanner(sourceFile);
+        String fileContent = "";
+        while(scan.hasNext()){
+            fileContent = fileContent.concat(scan.nextLine()+"\n");
+        }
+        FileWriter writer = new FileWriter(destinationFile);
+        writer.write(fileContent);
+        writer.close();
+    }
+
+    private static void copyFile2(File sourceFile, File destinationFile, Task task) throws IOException {
+        Scanner scan= new Scanner(sourceFile);
+        String fileContent = "";
+        while(scan.hasNext()){
+            fileContent = fileContent.concat(scan.nextLine()+"\n");
+        }
+        fileContent = fileContent.replaceAll("org.accolite",task.getGroupId());
+        FileWriter writer = new FileWriter(destinationFile);
+        writer.write(fileContent);
+        writer.close();
     }
 
     private static void copyFile(File sourceFile, File destinationFile, Task task) throws IOException {
@@ -141,34 +205,8 @@ public class QuarkusService {
             byte[] buf = new byte[1024];
             int bytesRead;
 
-//        if(!task.getGroupId().equals("org.accolite")){
-//            String text = new String(buf, StandardCharsets.UTF_8);
-//            text = text.replace("org.accolite", task.getGroupId());
-//            buf = text.getBytes();
-//        }
-
-//            if (text.contains("org.accolite")) {
-//            text = text.replace("org.accolite", task.getGroupId());
-//            buf=text.getBytes(StandardCharsets.UTF_8);
-//            logger.info("input content {}",text);
-//            }
-
             while ((bytesRead = input.read(buf)) != -1){
-//                String text = new String(buf, StandardCharsets.UTF_8);
-//                logger.info("input content before {} ", bytesRead);
-//                if (text.contains("org.accolite")) {
-//                    text = text.replace("org.accolite", task.getGroupId());
-//                    byte[] newBuf = text.getBytes();
-//                    int newBytesRead = input.read(text.getBytes());
-//                     logger.info("input content{} {}",bytesRead, text);
-//                    logger.info("input content after {} ", bytesRead);
-//                    output.write(text.getBytes());
-//
-//                } else {
                     output.write(buf, 0, bytesRead);
-//                output.write(buf);
-
-//                }
             }
                 input.close();
                 output.close();

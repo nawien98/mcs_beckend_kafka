@@ -14,7 +14,17 @@ import javax.persistence.Table;
 @Data
 
 public class Task {
+    String language;
+    String framework;
     String groupId;
     String artifactId;
+    String build;
+    String deploy;
+    String orchestration;
+    String authentication;
+    String tracing;
+    String monitoring;
+    String logging;
+    String database;
     String[] extensions;
 }
