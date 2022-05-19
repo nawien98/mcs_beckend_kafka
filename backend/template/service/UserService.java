@@ -11,6 +11,7 @@ public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     public boolean CreateUser(User user){
+        logger.info("[UserService] create user request: {}", user);
         User.persist(user);
         return true;
     }

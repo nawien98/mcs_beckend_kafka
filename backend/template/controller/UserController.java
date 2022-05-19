@@ -30,6 +30,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/user-service/{id}")
     public Response GerUserInfoService(@PathParam("id") int id) {
+        logger.info("[UserController] get user request id: {}", id);
         User u = User.findById(id);
 
         return Response.ok(u).build();
@@ -40,6 +41,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/user-service/user")
     public Response CreateUserService(User user) {
+        logger.info("[UserController] create user request: {}", user);
         boolean result = service.CreateUser(user);
         if (!result){
             return Response.status(RestResponse.Status.BAD_REQUEST).entity("{"+"\"msg\": \""+"Create user error"+"\"}").build();

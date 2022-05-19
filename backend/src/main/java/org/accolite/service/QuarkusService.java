@@ -25,6 +25,7 @@ public class QuarkusService {
                 copyDockerTemplate(task);
 //                writeSQLconfig(task);
                 copyReadme(task);
+                copyProperties(task);
                 compressToZip(task);
             }
         } catch (IOException e) {
@@ -40,7 +41,6 @@ public class QuarkusService {
         String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
 
         String database = ConfigProvider.getConfig().getValue("quarkus."+task.getDatabase(), String.class);
-        logger.info("[test get env] mysql {}",database);
         String[] commands = new String[] {
                 "mvn",
                 "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
@@ -136,11 +136,19 @@ public class QuarkusService {
         copyDirectory(sourceDirectory,destinationDirectory, task);
     }
 
+    public void copyProperties(Task task) throws IOException {
+        String source = getPath("template",task);
+        String destination = getPath("root",task);
+        File sourceDirectory = new File(source+"/"+"application.properties");
+        File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
+        copyFile2(sourceDirectory,destinationDirectory,task);
+    }
+
     public void copyReadme(Task task) throws IOException {
         String source = getPath("template",task);
-        String destination = getPath("temp",task);
+        String destination = getPath("root",task);
         File sourceDirectory = new File(source+"/"+"README.md");
-        File destinationDirectory = new File(destination,task.getArtifactId());
+        File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/README.md");
         copyFile2(sourceDirectory,destinationDirectory,task);
     }
 
