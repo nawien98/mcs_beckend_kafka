@@ -35,6 +35,7 @@ public class QuarkusService {
     }
 
     public boolean createCommand(Task task) {
+        String os = System.getProperty("os.name");
         boolean result = true;
         String targetPath = getPath("root",task);
         logger.info("[generateProjectService] request: {}",task);
@@ -49,6 +50,19 @@ public class QuarkusService {
                 "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
                 "-DbuildTool="+task.getBuild(),
         };
+
+        if (os.contains("Windows")){
+            commands = new String[] {
+                    "cmd",
+                    "/c",
+                    "mvn",
+                    "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
+                    "-DprojectGroupId="+task.getGroupId(),
+                    "-DprojectArtifactId="+task.getArtifactId(),
+                    "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
+                    "-DbuildTool="+task.getBuild(),
+            };
+        }
 
         try {
             Process process = Runtime.getRuntime().exec(commands, null, new File(targetPath));
