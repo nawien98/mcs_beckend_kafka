@@ -12,6 +12,6 @@ public class User extends PanacheEntityBase {
     public Integer id;
 
     @Column
-    public String name;
+
 
 }

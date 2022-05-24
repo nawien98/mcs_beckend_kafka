@@ -21,6 +21,7 @@ public class QuarkusService {
 
         try{
             if (result){
+//                checkProjectExist(task);
                 copyMvcTemplate(task);
                 copyDockerTemplate(task);
 //                writeSQLconfig(task);
@@ -129,6 +130,15 @@ public class QuarkusService {
         return "";
     }
 
+    public void checkProjectExist(Task task){
+        String destination = getPath("root",task);
+        File destinationDirectory = new File(destination,task.getArtifactId());
+        if (destinationDirectory.exists()) {
+            deleteDirectory(destinationDirectory);
+        }
+
+    }
+
     public void copyMvcTemplate(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("mvc",task);
@@ -209,13 +219,38 @@ public class QuarkusService {
         writer.close();
     }
 
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
+    }
+
+
     private static void copyFile2(File sourceFile, File destinationFile, Task task) throws IOException {
         Scanner scan= new Scanner(sourceFile);
         String fileContent = "";
         while(scan.hasNext()){
-            fileContent = fileContent.concat(scan.nextLine()+"\n");
+            StringBuilder s = new StringBuilder(scan.nextLine());
+            if (s.toString().contains("org.accolite")){
+                s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
+            }
+            if (s.toString().contains("@Column") && task.getEntities()!=null){
+                String[][] entities = task.getEntities();
+                for(int i = 0;i<entities.length;i++){
+                    if (i != 0){
+                        s.append("\n\t@Column\n").append("\tpublic ").append(entities[i][0]).append(" ").append(entities[i][1]).append(";\n");
+                    }else{
+                        s.append("\n" + "\tpublic ").append(entities[i][0]).append(" ").append(entities[i][1]).append(";\n");
+                    }
+                }
+            }
+            fileContent = fileContent.concat(s+"\n");
         }
-        fileContent = fileContent.replaceAll("org.accolite",task.getGroupId());
+//        fileContent = fileContent.replaceAll("org.accolite",task.getGroupId());
         FileWriter writer = new FileWriter(destinationFile);
         writer.write(fileContent);
         writer.close();
@@ -232,7 +267,7 @@ public class QuarkusService {
             }
                 input.close();
                 output.close();
-            }
+    }
 
     private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
         if (fileToZip.isHidden()) {

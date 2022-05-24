@@ -25,6 +25,7 @@ public class Task {
     String monitoring;
     String logging;
     String database;
+    String[][] entities;
     String[] extensions;
 
 }
