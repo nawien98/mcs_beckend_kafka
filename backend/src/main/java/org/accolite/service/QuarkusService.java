@@ -21,10 +21,12 @@ public class QuarkusService {
 
         try{
             if (result){
+//                checkProjectExist(task);
                 copyMvcTemplate(task);
                 copyDockerTemplate(task);
 //                writeSQLconfig(task);
                 copyReadme(task);
+                copyProperties(task);
                 compressToZip(task);
             }
         } catch (IOException e) {
@@ -34,13 +36,13 @@ public class QuarkusService {
     }
 
     public boolean createCommand(Task task) {
+        String os = System.getProperty("os.name");
         boolean result = true;
         String targetPath = getPath("root",task);
         logger.info("[generateProjectService] request: {}",task);
         String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
 
         String database = ConfigProvider.getConfig().getValue("quarkus."+task.getDatabase(), String.class);
-        logger.info("[test get env] mysql {}",database);
         String[] commands = new String[] {
                 "mvn",
                 "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
@@ -49,6 +51,19 @@ public class QuarkusService {
                 "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
                 "-DbuildTool="+task.getBuild(),
         };
+
+        if (os.contains("Windows")){
+            commands = new String[] {
+                    "cmd",
+                    "/c",
+                    "mvn",
+                    "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
+                    "-DprojectGroupId="+task.getGroupId(),
+                    "-DprojectArtifactId="+task.getArtifactId(),
+                    "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
+                    "-DbuildTool="+task.getBuild(),
+            };
+        }
 
         try {
             Process process = Runtime.getRuntime().exec(commands, null, new File(targetPath));
@@ -115,6 +130,15 @@ public class QuarkusService {
         return "";
     }
 
+    public void checkProjectExist(Task task){
+        String destination = getPath("root",task);
+        File destinationDirectory = new File(destination,task.getArtifactId());
+        if (destinationDirectory.exists()) {
+            deleteDirectory(destinationDirectory);
+        }
+
+    }
+
     public void copyMvcTemplate(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("mvc",task);
@@ -136,11 +160,19 @@ public class QuarkusService {
         copyDirectory(sourceDirectory,destinationDirectory, task);
     }
 
+    public void copyProperties(Task task) throws IOException {
+        String source = getPath("template",task);
+        String destination = getPath("root",task);
+        File sourceDirectory = new File(source+"/"+"application.properties");
+        File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
+        copyFile2(sourceDirectory,destinationDirectory,task);
+    }
+
     public void copyReadme(Task task) throws IOException {
         String source = getPath("template",task);
-        String destination = getPath("temp",task);
+        String destination = getPath("root",task);
         File sourceDirectory = new File(source+"/"+"README.md");
-        File destinationDirectory = new File(destination,task.getArtifactId());
+        File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/README.md");
         copyFile2(sourceDirectory,destinationDirectory,task);
     }
 
@@ -187,13 +219,38 @@ public class QuarkusService {
         writer.close();
     }
 
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
+    }
+
+
     private static void copyFile2(File sourceFile, File destinationFile, Task task) throws IOException {
         Scanner scan= new Scanner(sourceFile);
         String fileContent = "";
         while(scan.hasNext()){
-            fileContent = fileContent.concat(scan.nextLine()+"\n");
+            StringBuilder s = new StringBuilder(scan.nextLine());
+            if (s.toString().contains("org.accolite")){
+                s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
+            }
+            if (s.toString().contains("@Column") && task.getEntities()!=null){
+                String[][] entities = task.getEntities();
+                for(int i = 0;i<entities.length;i++){
+                    if (i != 0){
+                        s.append("\n\t@Column\n").append("\tpublic ").append(entities[i][0]).append(" ").append(entities[i][1]).append(";\n");
+                    }else{
+                        s.append("\n" + "\tpublic ").append(entities[i][0]).append(" ").append(entities[i][1]).append(";\n");
+                    }
+                }
+            }
+            fileContent = fileContent.concat(s+"\n");
         }
-        fileContent = fileContent.replaceAll("org.accolite",task.getGroupId());
+//        fileContent = fileContent.replaceAll("org.accolite",task.getGroupId());
         FileWriter writer = new FileWriter(destinationFile);
         writer.write(fileContent);
         writer.close();
@@ -210,7 +267,7 @@ public class QuarkusService {
             }
                 input.close();
                 output.close();
-            }
+    }
 
     private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
         if (fileToZip.isHidden()) {

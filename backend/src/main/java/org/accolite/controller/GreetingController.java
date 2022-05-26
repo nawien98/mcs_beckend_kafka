@@ -23,14 +23,4 @@ public class GreetingController {
         return "Hello from RESTEasy Reactive";
     }
 
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON)
-//    @Path("/greeting/{id}")
-//    public Response greetingUser(@PathParam("id") int id) {
-//        User u = User.findById(id);
-//        String message = "{" +
-//                "\"msg\": \""+service.greeting(u.name)+
-//                "\"}";
-//        return Response.ok(message).build();
-//    }
 }

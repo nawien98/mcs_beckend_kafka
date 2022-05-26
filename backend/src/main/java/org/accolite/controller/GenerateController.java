@@ -2,6 +2,7 @@ package org.accolite.controller;
 
 import org.accolite.model.Task;
 import org.accolite.service.QuarkusService;
+import org.accolite.service.SpringBootService;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,28 +18,8 @@ public class GenerateController {
     private static final Logger logger = LoggerFactory.getLogger(GenerateController.class);
 
     @Inject
-    QuarkusService service;
-
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/v1/ms-accelerator/generate")
-    public Response generate(@QueryParam("g") String groupId,@QueryParam("a") String artifactId ,@QueryParam("e") String[] extensions) {
-        Task task = new Task();
-        task.setGroupId(groupId);
-        task.setArtifactId(artifactId);
-        task.setExtensions(extensions);
-        logger.info("[GenerateController] Request info: {}", task);
-        boolean result = service.generateQuarkusService(task);
-        if (result) {
-            File zipOutput = new File("/Users/boris/Projects/ms-accelerator/backend/temp/" + task.getArtifactId() + ".zip");
-            Response.ResponseBuilder response = Response.ok((Object) zipOutput);
-            response.header("Content-Disposition", "attachment;filename=" + task.getArtifactId() + ".zip");
-            return response.build();
-        }
-        return Response.status(RestResponse.Status.BAD_REQUEST).build();
-
-
-    }
+    QuarkusService quarkusGenerator;
+    SpringBootService springGenerator;
 
     @POST
 //    @Produces(MediaType.APPLICATION_JSON)
@@ -50,17 +31,17 @@ public class GenerateController {
         boolean result=false;
         switch (task.getFramework()){
             case "quarkus":
-                result = service.generateQuarkusService(task);
+                result = quarkusGenerator.generateQuarkusService(task);
                 break;
+            case "springBoot":
+                result = springGenerator.generateQuarkusService(task);
             default:
                 break;
         }
 
-
-
 //        boolean result = service.generateQuarkusService(task);
         if(result){
-            File zipOutput = new File(service.getPath("temp",task)+"/"+task.getArtifactId()+".zip");
+            File zipOutput = new File(quarkusGenerator.getPath("temp",task)+"/"+task.getArtifactId()+".zip");
 //            Response.ResponseBuilder response = Response.ok((Object) zipOutput);
 //            response.header("Content-Disposition", "attachment;filename=" + task.getArtifactId() + ".zip");
 //            return response.build();

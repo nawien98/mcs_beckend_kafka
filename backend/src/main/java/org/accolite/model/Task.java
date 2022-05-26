@@ -12,7 +12,6 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @ToString
 @Data
-
 public class Task {
     String language;
     String framework;
@@ -26,5 +25,7 @@ public class Task {
     String monitoring;
     String logging;
     String database;
+    String[][] entities;
     String[] extensions;
+
 }

@@ -13,27 +13,50 @@ brew install make
 ```
 
 ### Run steps
-Step1: Use `make` to execute makefile run mysql in docker
-```bash
-make docker-up
-```
-OR  use docker-compose command directly
-```bash
-docker-compose -f docker-compose.yaml up --build
-```
 
-Step2: Use `make` to execute makefile run application
+[comment]: <> (Step1: Use `make` to execute makefile run mysql in docker)
+
+[comment]: <> (```bash)
+
+[comment]: <> (make docker-up)
+
+[comment]: <> (```)
+
+[comment]: <> (OR  use docker-compose command directly)
+
+[comment]: <> (```bash)
+
+[comment]: <> (docker-compose -f docker-compose.yaml up --build)
+
+[comment]: <> (```)
+
+Step1: Use `make` to execute makefile run application
 ```bash
 make run
 ```
 OR  use mvnw command directly
 ```bash
-./mvnw quarkus:dev
+./mvnw compile quarkus:dev
 ```
 
 Step3: Use `curl` to call API
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"groupId" : "org.acme", "artifactId":"getting-started", "extensions":"resteasy-reactive,quarkus-jdbc-mysql,smallrye-openapi,quarkus-resteasy-jackson"}' "http://localhost:8080/api/v1/ms-accelerator/generate"
+curl -X POST http://localhost:8080/api/v1/ms-accelerator/generate \
+-H "Content-Type: application/json" \
+-d '{
+  "language":"java",
+  "framework":"quarkus",
+  "groupId" : "org.accolite",
+  "artifactId": "getting-started",
+  "build": "maven",
+  "deploy": "docker",
+  "orchestration": "kubernetes",
+  "authentication": "oauth",
+  "tracing": "opentracing",
+  "monitoring": "grafana",
+  "logging": "slf4j",
+  "database":"mysql"
+}'
 ```
 Swagger: http://localhost:8080/swagger-ui
 
