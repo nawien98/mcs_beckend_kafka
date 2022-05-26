@@ -17,12 +17,12 @@ public class QuarkusService {
     private static final Logger logger = LoggerFactory.getLogger(QuarkusService.class);
 
     public boolean generateQuarkusService(Task task){
+        checkProjectExist(task);
         boolean result = createCommand(task);
-
         try{
             if (result){
-//                checkProjectExist(task);
-                copyMvcTemplate(task);
+                copyControllerAndServiceTemplate(task);
+                copyModelTemplate(task);
                 copyDockerTemplate(task);
 //                writeSQLconfig(task);
                 copyReadme(task);
@@ -33,6 +33,15 @@ public class QuarkusService {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public void checkProjectExist(Task task){
+        String destination = getPath("root",task);
+        File destinationDirectory = new File(destination,task.getArtifactId());
+        if (destinationDirectory.exists()) {
+            logger.info("checkProjectExist: {}",destinationDirectory.exists());
+            deleteDirectory(destinationDirectory);
+        }
     }
 
     public boolean createCommand(Task task) {
@@ -83,32 +92,6 @@ public class QuarkusService {
         return result;
     }
 
-    public void updatePackageName(Task task){
-        String str = "Append OutputStream Example \n";
-        File textFile = new File("TextFile.txt");
-        FileOutputStream fileOutputStream = null;
-        try {
-        //Create FileOutputStream with append flag as true
-            fileOutputStream = new FileOutputStream(textFile, true);
-
-        // Writes bytes to the stream
-            fileOutputStream.write(str.getBytes());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            // close the stream
-            try {
-                if (fileOutputStream != null) {
-                    fileOutputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public String getPath(String folderLayer, Task task) {
         try {
             String currentPath = new java.io.File(".").getCanonicalPath();
@@ -130,24 +113,49 @@ public class QuarkusService {
         return "";
     }
 
-    public void checkProjectExist(Task task){
-        String destination = getPath("root",task);
-        File destinationDirectory = new File(destination,task.getArtifactId());
-        if (destinationDirectory.exists()) {
-            deleteDirectory(destinationDirectory);
-        }
-
-    }
-
-    public void copyMvcTemplate(Task task) throws IOException {
+    public void copyControllerAndServiceTemplate(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("mvc",task);
         logger.info("[copyMvcTemplate] copy path: {}{}", source, destination);
-        String[] list = {"controller","model","service"};
+        String[] list = {"controller","service"};
         for (String subfolder:list) {
            File sourceDirectory = new File(source,subfolder);
            File destinationDirectory = new File(destination,subfolder);
            copyDirectory(sourceDirectory,destinationDirectory, task);
+        }
+    }
+
+    private void copyModelTemplate(Task task) throws IOException {
+        String source = getPath("template", task);
+        String destination = getPath("mvc", task);
+        File sourceDirectory = new File(source + "/model/Default.java");
+        File destinationDirectory = new File(destination ,"model");
+        destinationDirectory.mkdir();
+        for (int i = 0; i <task.getEntities().size(); i++){
+            Scanner scan = new Scanner(sourceDirectory);
+            File destinationFile = new File(destination + "/model/" + task.getEntities().get(i).getEntity_name() + ".java");
+            destinationFile.createNewFile();
+            String fileContent = "";
+            while (scan.hasNext()) {
+                StringBuilder s = new StringBuilder(scan.nextLine());
+                if (s.toString().contains("org.accolite")){
+                    s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
+                }
+                if (s.toString().contains("Default")){
+                    s = new StringBuilder(s.toString().replace("Default", task.getEntities().get(i).getEntity_name()));
+                }
+                if (s.toString().contains("default")){
+                    s = new StringBuilder(s.toString().replace("default", task.getEntities().get(i).getEntity_name().toLowerCase()+"s"));
+                }
+                if (s.toString().contains("@Column") && task.getEntities()!=null){
+                    String[][] fields = task.getEntities().get(i).getFields();
+                    s.append(addColumns(fields));
+                }
+                fileContent = fileContent.concat(s + "\n");
+            }
+            FileWriter writer = new FileWriter(destinationFile);
+            writer.write(fileContent);
+            writer.close();
         }
     }
 
@@ -165,7 +173,7 @@ public class QuarkusService {
         String destination = getPath("root",task);
         File sourceDirectory = new File(source+"/"+"application.properties");
         File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
-        copyFile2(sourceDirectory,destinationDirectory,task);
+        copyFile(sourceDirectory,destinationDirectory,task);
     }
 
     public void copyReadme(Task task) throws IOException {
@@ -173,7 +181,7 @@ public class QuarkusService {
         String destination = getPath("root",task);
         File sourceDirectory = new File(source+"/"+"README.md");
         File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/README.md");
-        copyFile2(sourceDirectory,destinationDirectory,task);
+        copyFile(sourceDirectory,destinationDirectory,task);
     }
 
     public void compressToZip(Task task ) throws IOException {
@@ -199,7 +207,7 @@ public class QuarkusService {
             if (source.isDirectory()) {
                 copyDirectory(source, destination, task);
             } else {
-                copyFile2(source, destination, task);
+                copyFile(source, destination, task);
             }
         }
     }
@@ -219,18 +227,29 @@ public class QuarkusService {
         writer.close();
     }
 
-    boolean deleteDirectory(File directoryToBeDeleted) {
+    private void deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles();
         if (allContents != null) {
             for (File file : allContents) {
                 deleteDirectory(file);
             }
         }
-        return directoryToBeDeleted.delete();
+        directoryToBeDeleted.delete();
     }
 
+    private static StringBuilder addColumns(String[][] fields){
+        StringBuilder s = new StringBuilder();
+        for(int i = 0;i<fields.length;i++){
+            if (i != 0){
+                s.append("\n\t@Column\n").append("\tpublic ").append(fields[i][0]).append(" ").append(fields[i][1]).append(";\n");
+            }else{
+                s.append("\n" + "\tpublic ").append(fields[i][0]).append(" ").append(fields[i][1]).append(";\n");
+            }
+        }
+        return s;
+    }
 
-    private static void copyFile2(File sourceFile, File destinationFile, Task task) throws IOException {
+    private static void copyFile(File sourceFile, File destinationFile, Task task) throws IOException {
         Scanner scan= new Scanner(sourceFile);
         String fileContent = "";
         while(scan.hasNext()){
@@ -238,35 +257,11 @@ public class QuarkusService {
             if (s.toString().contains("org.accolite")){
                 s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
             }
-            if (s.toString().contains("@Column") && task.getEntities()!=null){
-                String[][] entities = task.getEntities();
-                for(int i = 0;i<entities.length;i++){
-                    if (i != 0){
-                        s.append("\n\t@Column\n").append("\tpublic ").append(entities[i][0]).append(" ").append(entities[i][1]).append(";\n");
-                    }else{
-                        s.append("\n" + "\tpublic ").append(entities[i][0]).append(" ").append(entities[i][1]).append(";\n");
-                    }
-                }
-            }
             fileContent = fileContent.concat(s+"\n");
         }
-//        fileContent = fileContent.replaceAll("org.accolite",task.getGroupId());
         FileWriter writer = new FileWriter(destinationFile);
         writer.write(fileContent);
         writer.close();
-    }
-
-    private static void copyFile(File sourceFile, File destinationFile, Task task) throws IOException {
-        FileInputStream input = new FileInputStream(sourceFile);
-        FileOutputStream output = new FileOutputStream(destinationFile);
-            byte[] buf = new byte[1024];
-            int bytesRead;
-
-            while ((bytesRead = input.read(buf)) != -1){
-                    output.write(buf, 0, bytesRead);
-            }
-                input.close();
-                output.close();
     }
 
     private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {

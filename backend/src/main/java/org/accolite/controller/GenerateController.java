@@ -12,6 +12,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.util.List;
 
 @Path("/api")
 public class GenerateController {
@@ -27,6 +28,13 @@ public class GenerateController {
     @Path("/v1/ms-accelerator/generate")
     public Response generate(Task task){
         logger.info("[GenerateController] Request info: {}", task);
+//        logger.info("[GenerateController] entities2 size: {}", task.getEntities2().size());
+//        for(int i=0;i<task.getEntities2().size();i++){
+//            System.out.println(task.getEntities2().get(i));
+//            logger.info("[GenerateController] entities2 loop: {}", task.getEntities2().get(i));
+//            logger.info("[GenerateController] entities2 name: {}", task.getEntities2().get(i).getEntity_name());
+//        }
+
 
         boolean result=false;
         switch (task.getFramework()){

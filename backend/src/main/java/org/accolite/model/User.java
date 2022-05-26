@@ -9,7 +9,7 @@ import javax.persistence.*;
 public class User extends PanacheEntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Integer id;
+    public long id;
 
     @Column
     public String name;
