@@ -7,8 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.*;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -17,7 +20,9 @@ public class QuarkusService {
     private static final Logger logger = LoggerFactory.getLogger(QuarkusService.class);
 
     public boolean generateQuarkusService(Task task){
+        logger.info("[generateQuarkusService] request: {}", task);
         checkProjectExist(task);
+
         boolean result = createCommand(task);
         try{
             if (result){
@@ -35,29 +40,71 @@ public class QuarkusService {
         return result;
     }
 
+
+    /**
+     * This function mainly check the project folder exist or not,if existed then delete it.
+     * @param task
+     */
     public void checkProjectExist(Task task){
-        String destination = getPath("root",task);
+        String destination = getPath("temp",task);
         File destinationDirectory = new File(destination,task.getArtifactId());
-        if (destinationDirectory.exists()) {
-            logger.info("checkProjectExist: {}",destinationDirectory.exists());
+        boolean exist = destinationDirectory.exists();
+        logger.info("[checkProjectExist] result: {}",exist);
+        if (exist) {
             deleteDirectory(destinationDirectory);
         }
     }
 
+    /**
+     * This function mainly fetch the fields from request body, and make a list
+     * @param task
+     * @return arraylist
+     */
+    public static List<String> fetchExtensionList (Task task) {
+        Set<String> excludeFields = Stream.of("language", "framework", "groupId","artifactId","build","deploy","entities")
+                .collect(Collectors.toCollection(HashSet::new));
+        List<String> extensionList = new ArrayList<>();
+        try {
+            for (Field field: task.getClass().getDeclaredFields()){
+                field.setAccessible(true);
+                Object value = field.get(task);
+                if (value != null && !excludeFields.contains(field.getName())) {
+                    if(field.getName().equals("monitoring")){ //TODO: Not sure grafana's dependency in quarkus
+                        continue;
+                    }
+                    if(value.toString().equals("slf4j")){// slf4j is default logging in quarkus
+                        continue;
+                    }
+                    String extension = ConfigProvider.getConfig().getValue("quarkus."+value, String.class);
+                    extensionList.add(extension);
+                }
+            }
+        }catch (IllegalAccessException e){
+            e.printStackTrace();
+        }
+        logger.info("[fetchExtensionList] list: {}",extensionList);
+        return extensionList;
+    }
+
+
+    /**
+     * This function mainly execute "mvn" command to create a quarkus project.
+     * @param task generate requirement
+     * @return
+     */
     public boolean createCommand(Task task) {
         String os = System.getProperty("os.name");
         boolean result = true;
-        String targetPath = getPath("root",task);
-        logger.info("[generateProjectService] request: {}",task);
-        String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
-
-        String database = ConfigProvider.getConfig().getValue("quarkus."+task.getDatabase(), String.class);
+        String targetPath = getPath("temp",task);
+        logger.info("[createCommand] request: {}",task);
+//        String extensions =Arrays.toString(task.getExtensions()).replaceAll("\\[|\\]|\\s+","");
+        String extensions = String.join(",", fetchExtensionList(task));
         String[] commands = new String[] {
                 "mvn",
                 "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
                 "-DprojectGroupId="+task.getGroupId(),
                 "-DprojectArtifactId="+task.getArtifactId(),
-                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
+                "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+extensions,
                 "-DbuildTool="+task.getBuild(),
         };
 
@@ -69,7 +116,7 @@ public class QuarkusService {
                     "io.quarkus.platform:quarkus-maven-plugin:2.8.3.Final:create",
                     "-DprojectGroupId="+task.getGroupId(),
                     "-DprojectArtifactId="+task.getArtifactId(),
-                    "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+database,
+                    "-Dextensions=resteasy-reactive,smallrye-openapi,quarkus-resteasy-reactive-jackson,quarkus-hibernate-orm-rest-data-panache,"+extensions,
                     "-DbuildTool="+task.getBuild(),
             };
         }
@@ -92,12 +139,21 @@ public class QuarkusService {
         return result;
     }
 
+    /**
+     * This function mainly get the folder path
+     * @param folderLayer
+     * @param task
+     * @return
+     */
+
     public String getPath(String folderLayer, Task task) {
         try {
             String currentPath = new java.io.File(".").getCanonicalPath();
             switch (folderLayer) {
-                case "root":
+                case "temp":
                     return currentPath + "/temp";
+                case "project":
+                    return currentPath + "/temp/" + task.getArtifactId();
                 case "mvc":
                     return currentPath + "/temp/" + task.getArtifactId() + "/src/main/java/" + task.getGroupId().replace(".", "/");
                 case "docker":
@@ -113,10 +169,15 @@ public class QuarkusService {
         return "";
     }
 
+    /**
+     * This function mainly copy the controller and service directory to generated project
+     * @param task
+     * @throws IOException
+     */
     public void copyControllerAndServiceTemplate(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("mvc",task);
-        logger.info("[copyMvcTemplate] copy path: {}{}", source, destination);
+        logger.info("[copyControllerAndServiceTemplate] copy path: {}, {}", source, destination);
         String[] list = {"controller","service"};
         for (String subfolder:list) {
            File sourceDirectory = new File(source,subfolder);
@@ -125,12 +186,18 @@ public class QuarkusService {
         }
     }
 
+    /**
+     * This function mainly copy the model directory to generated project
+     * @param task
+     * @throws IOException
+     */
     private void copyModelTemplate(Task task) throws IOException {
         String source = getPath("template", task);
         String destination = getPath("mvc", task);
         File sourceDirectory = new File(source + "/model/Default.java");
         File destinationDirectory = new File(destination ,"model");
         destinationDirectory.mkdir();
+        logger.info("[copyModelTemplate] copy path: {}{}", source, destination);
         for (int i = 0; i <task.getEntities().size(); i++){
             Scanner scan = new Scanner(sourceDirectory);
             File destinationFile = new File(destination + "/model/" + task.getEntities().get(i).getEntity_name() + ".java");
@@ -138,13 +205,13 @@ public class QuarkusService {
             String fileContent = "";
             while (scan.hasNext()) {
                 StringBuilder s = new StringBuilder(scan.nextLine());
-                if (s.toString().contains("org.accolite")){
+                if (s.toString().contains("org.accolite")){// change "org.accolite" to input's group id
                     s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
                 }
-                if (s.toString().contains("Default")){
+                if (s.toString().contains("Default")){// change class name "Default" to input's entity name
                     s = new StringBuilder(s.toString().replace("Default", task.getEntities().get(i).getEntity_name()));
                 }
-                if (s.toString().contains("default")){
+                if (s.toString().contains("default")){// change table name "default" to input's entity name
                     s = new StringBuilder(s.toString().replace("default", task.getEntities().get(i).getEntity_name().toLowerCase()+"s"));
                 }
                 if (s.toString().contains("@Column") && task.getEntities()!=null){
@@ -170,7 +237,7 @@ public class QuarkusService {
 
     public void copyProperties(Task task) throws IOException {
         String source = getPath("template",task);
-        String destination = getPath("root",task);
+        String destination = getPath("temp",task);
         File sourceDirectory = new File(source+"/"+"application.properties");
         File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
         copyFile(sourceDirectory,destinationDirectory,task);
@@ -178,14 +245,14 @@ public class QuarkusService {
 
     public void copyReadme(Task task) throws IOException {
         String source = getPath("template",task);
-        String destination = getPath("root",task);
+        String destination = getPath("temp",task);
         File sourceDirectory = new File(source+"/"+"README.md");
         File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/README.md");
         copyFile(sourceDirectory,destinationDirectory,task);
     }
 
     public void compressToZip(Task task ) throws IOException {
-        String source = getPath("root",task);
+        String source = getPath("temp",task);
         FileOutputStream fos = new FileOutputStream(source+"/"+task.getArtifactId()+".zip");
         ZipOutputStream zipOut = new ZipOutputStream(fos);
         File fileToZip = new File(source+"/"+task.getArtifactId());
@@ -214,7 +281,7 @@ public class QuarkusService {
 
     private void writeSQLconfig(Task task) throws IOException {
         String sourceFile = getPath("template/sqlConfig.yaml",task);
-        String destFile = getPath("root",task);
+        String destFile = getPath("temp",task);
         File destinationFile = new File(destFile+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
 
         Scanner scan= new Scanner(sourceFile);

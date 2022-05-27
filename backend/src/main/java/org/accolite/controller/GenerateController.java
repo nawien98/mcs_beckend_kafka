@@ -23,40 +23,45 @@ public class GenerateController {
     SpringBootService springGenerator;
 
     @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Path("/v1/ms-accelerator/generate")
     public Response generate(Task task){
         logger.info("[GenerateController] Request info: {}", task);
-//        logger.info("[GenerateController] entities2 size: {}", task.getEntities2().size());
-//        for(int i=0;i<task.getEntities2().size();i++){
-//            System.out.println(task.getEntities2().get(i));
-//            logger.info("[GenerateController] entities2 loop: {}", task.getEntities2().get(i));
-//            logger.info("[GenerateController] entities2 name: {}", task.getEntities2().get(i).getEntity_name());
-//        }
+
 
 
         boolean result=false;
-        switch (task.getFramework()){
-            case "quarkus":
-                result = quarkusGenerator.generateQuarkusService(task);
-                break;
-            case "springBoot":
-                result = springGenerator.generateQuarkusService(task);
-            default:
-                break;
+        if (task.getLanguage().equals("java")) {
+            switch (task.getFramework()) {
+                case "quarkus":
+                    result = quarkusGenerator.generateQuarkusService(task);
+                    break;
+                case "springBoot":
+                    result = springGenerator.generateSpringService(task);
+                    break;
+                default:
+                    break;
+            }
+        }else if (task.getLanguage().equals("kotlin")) {
+
+        }else{//language is .NET
+
         }
 
 //        boolean result = service.generateQuarkusService(task);
         if(result){
+            /**
+             *  The final response should be a zip file.
+             */
             File zipOutput = new File(quarkusGenerator.getPath("temp",task)+"/"+task.getArtifactId()+".zip");
 //            Response.ResponseBuilder response = Response.ok((Object) zipOutput);
 //            response.header("Content-Disposition", "attachment;filename=" + task.getArtifactId() + ".zip");
 //            return response.build();
-//            return Response.
-//                    ok((Object) zipOutput).
-//                    header("Content-Disposition", "attachment;filename=" + task.getArtifactId() + ".zip").
-//                    build();
+
+            /**
+             *  This is a temporary response.
+             */
             return Response.ok("Build success").build();
         }
         return Response.status(RestResponse.Status.BAD_REQUEST).build();

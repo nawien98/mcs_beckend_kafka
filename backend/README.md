@@ -55,6 +55,7 @@ curl -X POST http://localhost:8080/api/v1/ms-accelerator/generate \
   "tracing": "opentracing",
   "monitoring": "grafana",
   "logging": "slf4j",
+  "entities":[{"entity_name":"User","fields":[["String","name"],["String","address"],["long","phoneNumber"]]},{"entity_name":"Url","fields":[["String","long_url"],["String","short_url"]]}],
   "database":"mysql"
 }'
 ```
