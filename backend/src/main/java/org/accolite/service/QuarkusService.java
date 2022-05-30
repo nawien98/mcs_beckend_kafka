@@ -237,7 +237,15 @@ public class QuarkusService {
         File sourceDirectory = new File(source,"mysql");
         File destinationDirectory = new File(destination,"mysql");
         logger.info("[copyDockerTemplate] copy path: {}{}", sourceDirectory, destinationDirectory);
+        //copy mysql folder
         copyDirectory(sourceDirectory,destinationDirectory, task);
+
+        //copy docker-compose.yaml
+        File sourceFile = new File(source+"/docker-compose.yaml");
+        String destination2 = getPath("project",task);
+        File destinationFile = new File(destination2 + "/docker-compose.yaml");
+        destinationFile.createNewFile();
+        copyFile(sourceFile,destinationFile,task);
     }
 
     public void copyProperties(Task task) throws IOException {
@@ -249,8 +257,7 @@ public class QuarkusService {
         Scanner scan = new Scanner(sourceDirectory);
         String fileContent = "";
         while (scan.hasNext()) {
-            StringBuilder s = new StringBuilder(scan.nextLine());
-            fileContent = fileContent.concat(s + "\n");
+            fileContent = fileContent.concat(scan.nextLine() + "\n");
         }
         if (task.getAuthentication().equals("oauth")){
             fileContent = fileContent.concat("\nquarkus.oauth2.client-id=client_id\nquarkus.oauth2.client-secret=secret\nquarkus.oauth2.introspection-url=http://oauth-server/introspect\n");
