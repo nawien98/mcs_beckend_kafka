@@ -214,7 +214,7 @@ public class QuarkusService {
                 if (s.toString().contains("default")){// change table name "default" to input's entity name
                     s = new StringBuilder(s.toString().replace("default", task.getEntities().get(i).getEntity_name().toLowerCase()+"s"));
                 }
-                if (s.toString().contains("@Column") && task.getEntities()!=null){
+                if (s.toString().contains("@Column") && task.getEntities()!=null){// add column by input
                     String[][] fields = task.getEntities().get(i).getFields();
                     s.append(addColumns(fields));
                 }
@@ -226,6 +226,11 @@ public class QuarkusService {
         }
     }
 
+    /**
+     * This function main copy
+     * @param task
+     * @throws IOException
+     */
     public void copyDockerTemplate(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("docker",task);
@@ -240,7 +245,23 @@ public class QuarkusService {
         String destination = getPath("temp",task);
         File sourceDirectory = new File(source+"/"+"application.properties");
         File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
-        copyFile(sourceDirectory,destinationDirectory,task);
+//        copyFile(sourceDirectory,destinationDirectory,task);
+        Scanner scan = new Scanner(sourceDirectory);
+        String fileContent = "";
+        while (scan.hasNext()) {
+            StringBuilder s = new StringBuilder(scan.nextLine());
+            fileContent = fileContent.concat(s + "\n");
+        }
+        if (task.getAuthentication().equals("oauth")){
+            fileContent = fileContent.concat("\nquarkus.oauth2.client-id=client_id\nquarkus.oauth2.client-secret=secret\nquarkus.oauth2.introspection-url=http://oauth-server/introspect\n");
+        }
+        if (task.getDatabase().equals("mysql")){
+            fileContent = fileContent.concat("\n#quarkus.datasource.db-kind=mysql\n#quarkus.datasource.username=root\n#quarkus.datasource.password=password\n#quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/database?autoReconnect=true&useSSL=false\n");
+        }
+        FileWriter writer = new FileWriter(destinationDirectory);
+        writer.write(fileContent);
+        writer.close();
+
     }
 
     public void copyReadme(Task task) throws IOException {
