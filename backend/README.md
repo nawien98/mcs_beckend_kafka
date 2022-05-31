@@ -54,6 +54,7 @@ curl -X POST http://localhost:8080/api/v1/ms-accelerator/generate \
   "build": "maven",
   "deploy": "docker",
   "orchestration": "kubernetes",
+  "security":"quarkus-security",
   "authentication": "oauth",
   "tracing": "opentracing",
   "monitoring": "grafana",

@@ -19,6 +19,7 @@ public class Task {
     String build;
     String deploy;
     String orchestration;
+    String security;
     String authentication;
     String tracing;
     String monitoring;

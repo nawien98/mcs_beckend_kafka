@@ -76,6 +76,10 @@ public class QuarkusService {
                     if(value.toString().equals("slf4j")){// slf4j is default logging in quarkus
                         continue;
                     }
+                    if(value.toString().equals("quarkus-security")){
+                        extensionList.add(value.toString());
+                        continue;
+                    }
                     String extension = ConfigProvider.getConfig().getValue("quarkus."+value, String.class);
                     extensionList.add(extension);
                 }
