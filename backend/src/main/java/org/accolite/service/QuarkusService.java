@@ -29,7 +29,6 @@ public class QuarkusService {
                 copyControllerAndServiceTemplate(task);
                 copyModelTemplate(task);
                 copyDockerTemplate(task);
-//                writeSQLconfig(task);
                 copyReadme(task);
                 copyProperties(task);
                 compressToZip(task);
@@ -248,12 +247,16 @@ public class QuarkusService {
         copyFile(sourceFile,destinationFile,task);
     }
 
+    /**
+     * This function mainly copy and write application.properties to generated project
+     * @param task
+     * @throws IOException
+     */
     public void copyProperties(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("temp",task);
         File sourceDirectory = new File(source+"/"+"application.properties");
         File destinationDirectory = new File(destination+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
-//        copyFile(sourceDirectory,destinationDirectory,task);
         Scanner scan = new Scanner(sourceDirectory);
         String fileContent = "";
         while (scan.hasNext()) {
@@ -262,8 +265,11 @@ public class QuarkusService {
         if (task.getAuthentication().equals("oauth")){
             fileContent = fileContent.concat("\nquarkus.oauth2.client-id=client_id\nquarkus.oauth2.client-secret=secret\nquarkus.oauth2.introspection-url=http://oauth-server/introspect\n");
         }
-        if (task.getDatabase().equals("mysql")){
-            fileContent = fileContent.concat("\n#quarkus.datasource.db-kind=mysql\n#quarkus.datasource.username=root\n#quarkus.datasource.password=password\n#quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/database?autoReconnect=true&useSSL=false\n");
+        if (task.getDatabase().equals("mysql")||task.getDatabase().equals("postgresql")){
+            fileContent = fileContent.concat("\n#quarkus.datasource.db-kind="+task.getDatabase()+"\n#quarkus.datasource.username=root\n#quarkus.datasource.password=password\n#quarkus.datasource.jdbc.url=jdbc:"+task.getDatabase()+"://localhost:"+ConfigProvider.getConfig().getValue("quarkus."+task.getDatabase()+".port", String.class)+"/database?autoReconnect=true&useSSL=false\n");
+        }
+        if (task.getDatabase().equals("oracle")){
+            fileContent = fileContent.concat("\n#quarkus.datasource.db-kind=other\n#quarkus.datasource.jdbc.driver=oracle.jdbc.driver.OracleDriver\n#quarkus.datasource.jdbc.url=jdbc:oracle:thin:@localhost/ORCL_SVC\n#quarkus.datasource.username=root\n#quarkus.datasource.password=passowrd\n");
         }
         FileWriter writer = new FileWriter(destinationDirectory);
         writer.write(fileContent);
@@ -271,6 +277,12 @@ public class QuarkusService {
 
     }
 
+
+    /**
+     * This function mainly copy and write read.me to generated project
+     * @param task
+     * @throws IOException
+     */
     public void copyReadme(Task task) throws IOException {
         String source = getPath("template",task);
         String destination = getPath("temp",task);
@@ -279,6 +291,11 @@ public class QuarkusService {
         copyFile(sourceDirectory,destinationDirectory,task);
     }
 
+    /**
+     * This function mainly compress project to zip file
+     * @param task
+     * @throws IOException
+     */
     public void compressToZip(Task task ) throws IOException {
         String source = getPath("temp",task);
         FileOutputStream fos = new FileOutputStream(source+"/"+task.getArtifactId()+".zip");
@@ -288,75 +305,6 @@ public class QuarkusService {
         zipFile(fileToZip, fileToZip.getName(), zipOut);
         zipOut.close();
         fos.close();
-    }
-
-    private static void copyDirectory(File sourceDir, File destDir, Task task) throws IOException {
-        if (!destDir.exists()) {
-            destDir.mkdir();
-        }
-
-        for (String f : sourceDir.list()) {
-            File source = new File(sourceDir, f);
-            File destination = new File(destDir, f);
-
-            if (source.isDirectory()) {
-                copyDirectory(source, destination, task);
-            } else {
-                copyFile(source, destination, task);
-            }
-        }
-    }
-
-    private void writeSQLconfig(Task task) throws IOException {
-        String sourceFile = getPath("template/sqlConfig.yaml",task);
-        String destFile = getPath("temp",task);
-        File destinationFile = new File(destFile+"/"+task.getArtifactId()+"/src/main/resources/application.properties");
-
-        Scanner scan= new Scanner(sourceFile);
-        String fileContent = "";
-        while(scan.hasNext()){
-            fileContent = fileContent.concat(scan.nextLine()+"\n");
-        }
-        FileWriter writer = new FileWriter(destinationFile);
-        writer.write(fileContent);
-        writer.close();
-    }
-
-    private void deleteDirectory(File directoryToBeDeleted) {
-        File[] allContents = directoryToBeDeleted.listFiles();
-        if (allContents != null) {
-            for (File file : allContents) {
-                deleteDirectory(file);
-            }
-        }
-        directoryToBeDeleted.delete();
-    }
-
-    private static StringBuilder addColumns(String[][] fields){
-        StringBuilder s = new StringBuilder();
-        for(int i = 0;i<fields.length;i++){
-            if (i != 0){
-                s.append("\n\t@Column\n").append("\tpublic ").append(fields[i][0]).append(" ").append(fields[i][1]).append(";\n");
-            }else{
-                s.append("\n" + "\tpublic ").append(fields[i][0]).append(" ").append(fields[i][1]).append(";\n");
-            }
-        }
-        return s;
-    }
-
-    private static void copyFile(File sourceFile, File destinationFile, Task task) throws IOException {
-        Scanner scan= new Scanner(sourceFile);
-        String fileContent = "";
-        while(scan.hasNext()){
-            StringBuilder s = new StringBuilder(scan.nextLine());
-            if (s.toString().contains("org.accolite")){
-                s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
-            }
-            fileContent = fileContent.concat(s+"\n");
-        }
-        FileWriter writer = new FileWriter(destinationFile);
-        writer.write(fileContent);
-        writer.close();
     }
 
     private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
@@ -387,4 +335,88 @@ public class QuarkusService {
         }
         fis.close();
     }
+
+    /**
+     * This function mainly copy directory to generated project
+     * @param sourceDir
+     * @param destDir
+     * @param task
+     * @throws IOException
+     */
+    private static void copyDirectory(File sourceDir, File destDir, Task task) throws IOException {
+        if (!destDir.exists()) {
+            destDir.mkdir();
+        }
+
+        for (String f : sourceDir.list()) {
+            File source = new File(sourceDir, f);
+            File destination = new File(destDir, f);
+
+            if (source.isDirectory()) {
+                copyDirectory(source, destination, task);
+            } else {
+                copyFile(source, destination, task);
+            }
+        }
+    }
+
+    /**
+     * This function mainly copy and write file to generated project
+     * @param sourceFile
+     * @param destinationFile
+     * @param task
+     * @throws IOException
+     */
+    private static void copyFile(File sourceFile, File destinationFile, Task task) throws IOException {
+        Scanner scan= new Scanner(sourceFile);
+        String fileContent = "";
+        while(scan.hasNext()){
+            StringBuilder s = new StringBuilder(scan.nextLine());
+            if (s.toString().contains("org.accolite")){
+                s = new StringBuilder(s.toString().replace("org.accolite", task.getGroupId()));
+            }
+            fileContent = fileContent.concat(s+"\n");
+        }
+        FileWriter writer = new FileWriter(destinationFile);
+        writer.write(fileContent);
+        writer.close();
+    }
+
+    /**
+     * This function mainly add columns to entities
+     * @param fields
+     * @return
+     */
+    private static StringBuilder addColumns(String[][] fields){
+        StringBuilder s = new StringBuilder();
+        for(int i = 0;i<fields.length;i++){
+            if (i != 0){
+                s.append("\n\t@Column\n").append("\tpublic ").append(fields[i][0]).append(" ").append(fields[i][1]).append(";\n");
+            }else{
+                s.append("\n" + "\tpublic ").append(fields[i][0]).append(" ").append(fields[i][1]).append(";\n");
+            }
+        }
+        return s;
+    }
+
+    /**
+     * This function mainly delete directory
+     * @param directoryToBeDeleted
+     */
+    private void deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        directoryToBeDeleted.delete();
+    }
+
+
+
+
+
+
+
 }
