@@ -46,6 +46,8 @@ public class QuarkusService {
      */
     public void checkProjectExist(Task task){
         String destination = getPath("temp",task);
+        File file = new File("./temp");
+        file.mkdir();
         File destinationDirectory = new File(destination,task.getArtifactId());
         boolean exist = destinationDirectory.exists();
         logger.info("[checkProjectExist] result: {}",exist);
