@@ -1,137 +1,73 @@
-import React,{useContext} from "react";
-import {useNavigate } from "react-router-dom";
-import { browserHistory } from "react-router";
-import './Home.css'
-import logo from './AccoliteLogo.png';
-import { useAuth } from "./context/AuthContext";
+import * as React from "react";
+import axios from 'axios';
+
+/*
+ LOGIC BROKEN:
+  - doesn't hold previous selection 
+
+*/
+
+const Home = () => {
 
 
-  function Home() {
-    
-    return (
-      <div className="app">
-        <div className="img">
-              <img src={logo} alt="Logo" />
-              </div>
-              <div className="headingHome">
-              <h1>Microservices Accelerator</h1>
-              </div>
-      <div className="loginform">
-          
-          <div className="form">
-           <form>
-           <div className="input-container">
-           <label>Language : 
-  <select defaultValue="Select Language">
-  <option defaultValue>Select Language</option>
-                        <option value="Java">Java</option>
-                        <option value="Kotlin">Kotlin</option>
-                        <option value=".NET">.NET</option>
+  //variable to hold the settings 
+  const [data, setData] = React.useState("");
+  //variable for user selection
+  const [selected, setSelection] = React.useState("");
+  //variable for html generated form
+  const [form_out, setForm] = React.useState("");
 
-                    </select>
-    </label>
-  
-  <label>Framework  :
-  <select defaultValue="Select Framework">
-  <option defaultValue>Select Framework</option>
+  //function to update user selection
+  const updateSelection = (event) => {
+    setSelection(event.target.id);
+  };
 
-                        <option value="SpringBoot">Spring Boot</option>
-                        <option value="Micronaut">Micronaut</option>
-                        <option value="Quarkus">Quarkus</option>
-                        <option value="Ktor">Ktor</option>
-                        <option value="HelidonSE">Helidon SE</option>
-                        <option value=".NETCore">.NETCore</option>
-                    </select>
-    </label>
+  // API call to get the initial configrations settings and the dependent values
+  React.useEffect(() => {
+    axios.get('http://localhost:8080/depend?name='+selected).then((res) => { setData( res.data ) });
+  }, [selected]);
 
-  <label>Build : 
-  <select defaultValue="Select Build">
-  <option defaultValue>Select Build</option>
-                        <option value="Maven">Maven</option>
-                        <option value="Gradle">Gradle</option>
 
-                    </select>
-    </label>
- 
-  <label>Deploy : 
-  <select defaultValue="Select Deploy">
-  <option defaultValue>Select Deploy</option>
-                        <option value="Docker">Docker</option>
-                        <option value="Podman">Podman</option>
+  React.useEffect(() => {
+    if (data !== null && data !== "" && data !== undefined){
+      
+      //clean data (combine duplicates)
 
-                    </select>
-    </label>
-    <label>Orchestration : 
-  <select defaultValue="Select Orchestration">
-  <option defaultValue>Select Orchestration</option>
-                        <option value="Kubernetes">Kubernetes</option>
-                    </select>
-    </label>
-    <label>Security : 
-  <select defaultValue="Select Security">
-  <option defaultValue>Select Security</option>
-                        <option value="SpringSecurity">Spring Security</option>
-                        <option value="MicronautSecurity">Micronaut Security</option>
-                        <option value="QuarkusSecurity">Quarkus Security</option>
 
-                    </select>
-    </label>
-    <label>Authentication : 
-  <select defaultValue="Select Authentication">
-  <option defaultValue>Select Authentication</option>
-                        <option value="JWT">JWT</option>
-                        <option value="OAuth">OAuth</option>
-
-                    </select>
-    </label>
-    <label>Tracing : 
-  <select defaultValue="Select Tracing">
-  <option defaultValue>Select Tracing</option>
-                        <option value="OpenTracing">OpenTracing</option>
-                    </select>
-    </label>
-    <label>Monitoring : 
-  <select defaultValue="Select Monitoring">
-  <option defaultValue>Select Monitoring</option>
-                        <option value="Grafana">Grafana</option>
-                    </select>
-    </label>
-    <label>Logging : 
-  <select defaultValue="Select Logging">
-  <option defaultValue>Select Logging</option>
-                        <option value="Slf4j">Slf4j</option>
-                        <option value="Logstash">Logstash</option>
-
-                    </select>
-    </label>
-    <label>Databases  :
-  <select defaultValue="Select Databases">
-  <option defaultValue>Select Databases</option>
-
-                        <option value="Oracle">Oracle</option>
-                        <option value="MySQL">MySQL</option>
-                        <option value="MongoDB">MongoDB</option>
-                        <option value="SQLServer">SQLServer</option>
-                        <option value="Postgres">Postgres</option>
-                    </select>
-    </label>
+      //nested map to navigate through the data and its inner values
+      setForm( data.map((e) => 
+        <><div>
+            {<h6>{e.name} :</h6>}
+            { e.values.map((v) =>          
+              <>
+                <input type="radio" className="btn-check" name={e.name} id={v} autoComplete="off" onChange={updateSelection} />
+                <label className="btn btn-outline-secondary" htmlFor={v}>{v}</label>
+              </>
+            )}
+          </div><br/>
+          </>
+      ));
+    }
+  }, [data]);
 
 
 
 
 
-</div>
-<div className="button-container">
-  <input type="submit" value="Submit" /></div>
-</form>
-</div>
-      </div></div>
-    );
-  }
-  
-  
-  
-
-
+return (
+	<div
+	style={{ 
+		padding: "16px",
+		margin: "16px",
+	}}
+	>
+	<form>
+    {
+      form_out
+    }
+	</form>
+	</div>
+);
+};
 
 export default Home;
