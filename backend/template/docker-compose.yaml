@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+
+  mysql:
+    platform: linux/amd64
+    image: mysql:5.7
+    restart: unless-stopped
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: database
+    ports:
+      - 3306:3306
+    volumes:
+      - "./src/main/docker/mysql/dump.sql:/docker-entrypoint-initdb.d/dump.sql"
+
+
+

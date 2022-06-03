@@ -3,11 +3,12 @@
 ## How to run in local:
 ### Required
 - Install docker
-- Install `curl` cli(https://formulae.brew.sh/formula/curl)
+- Install maven
+- Install `curl` cli(MacOS:https://formulae.brew.sh/formula/curl)
 ```bash
 brew install curl
 ```
-- Install `make` cli(https://formulae.brew.sh/formula/make)
+- Install `make` cli(MacOS:https://formulae.brew.sh/formula/make)
 ```bash
 brew install make
 ```
@@ -30,7 +31,9 @@ brew install make
 
 [comment]: <> (```)
 
-Step1: Use `make` to execute makefile run application
+Step1: Open project in backend folder layer
+
+Step2: Use `make` to execute makefile run application
 ```bash
 make run
 ```
@@ -51,10 +54,12 @@ curl -X POST http://localhost:8080/api/v1/ms-accelerator/generate \
   "build": "maven",
   "deploy": "docker",
   "orchestration": "kubernetes",
+  "security":"quarkus-security",
   "authentication": "oauth",
   "tracing": "opentracing",
   "monitoring": "grafana",
   "logging": "slf4j",
+  "entities":[{"entity_name":"User","fields":[["String","name"],["String","address"],["long","phoneNumber"]]},{"entity_name":"Url","fields":[["String","long_url"],["String","short_url"]]}],
   "database":"mysql"
 }'
 ```
