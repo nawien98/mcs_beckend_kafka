@@ -30,6 +30,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/user-service/{id}")
     public Response GerUserInfoService(@PathParam("id") int id) {
+        logger.info("[UserController] get user request id: {}", id);
         User u = User.findById(id);
 
         return Response.ok(u).build();
@@ -40,10 +41,38 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/user-service/user")
     public Response CreateUserService(User user) {
+        logger.info("[UserController] create user request: {}", user);
         boolean result = service.CreateUser(user);
         if (!result){
-            return Response.status(RestResponse.Status.BAD_REQUEST).entity("{"+"\"msg\": \""+"Create user error"+"\"}").build();
+            return Response.status(RestResponse.Status.BAD_REQUEST).build();
         }
         return Response.ok(user).build();
     }
+
+    @PUT
+    @Transactional
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/user-service/{id}")
+    public Response UpdateUserService(@PathParam("id") long id, User user) {
+        logger.info("[UserController] update user request: {} {}", id, user);
+        boolean result = service.UpdateUser(id,user);
+        if (!result){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+        return Response.ok("{"+"\"id\": "+id+", \"name\":\""+user.name+"\"}").build();
+    }
+
+    @DELETE
+    @Transactional
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/user-service/{id}")
+    public Response DeleteUserService(@PathParam("id") long id) {
+        logger.info("[UserController] delete user request: {}", id);
+        boolean result = service.DeleteUserById(id);
+        if (!result){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+        return Response.noContent().build();
+    }
+
 }

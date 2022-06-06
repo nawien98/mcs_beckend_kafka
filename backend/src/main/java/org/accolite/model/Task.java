@@ -1,9 +1,8 @@
 package org.accolite.model;
 
 import lombok.*;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+
+import java.util.List;
 
 //@Entity
 //@Table(name = "task")
@@ -12,7 +11,6 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @ToString
 @Data
-
 public class Task {
     String language;
     String framework;
@@ -21,10 +19,14 @@ public class Task {
     String build;
     String deploy;
     String orchestration;
+    String security;
     String authentication;
     String tracing;
     String monitoring;
     String logging;
     String database;
+    List<ModelEntity> entities;
     String[] extensions;
 }
+
+
