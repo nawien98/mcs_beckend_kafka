@@ -5,10 +5,10 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Enterprise telecoms and technology services | BT Business</title>
+        <title>Accolite Digital | Accelerators </title>
         <meta
           name="description"
-          content="BT Business offers a wide range of enterprise telecoms and technology services. We’re here to help large companies work faster, safer, smarter. "
+          content="Accolite Digital offers a wide range of technology services. "
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
