@@ -6,7 +6,8 @@ import { useAuth } from "./context/AuthContext";
 import {AuthProvider} from "./context/AuthContext";
 
 
-import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
+import {BrowserRouter, Routes, Route, Link, Navigate} from 'react-router-dom';
+import Trial from './Trial';
 
 function App() {
   return (
@@ -22,7 +23,10 @@ function App() {
         <Routes>
             <Route path="/register" element={<Register/>} />
         </Routes>
-        
+        <Routes>
+        <Route path="/" element={<Navigate replace to="/login" />} />
+        </Routes>
+
     </BrowserRouter>
     </AuthProvider>
     </div>
