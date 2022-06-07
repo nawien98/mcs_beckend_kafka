@@ -9,11 +9,11 @@ var SettingSchema = mongoose.Schema({
   values: [String],
   dependency: [String]
 });
-
+app.use(express.urlencoded({extended:false}))
 var Setting = mongoose.model('Setting', SettingSchema, 'settings');
 
 app.set('view engine', 'ejs')
-
+var finalsel;
 app.get('/all', async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
   const setg = await Setting.find();
@@ -55,6 +55,19 @@ app.get('/dependList', async (req, res) => {
   const depending = await Setting.find( { $or: [ { dependency: { $in: selected } }, { dependency: '' } ] });
   res.send(depending);
   //console.log(depending)
+})
+app.post('/create_result',(req,res)=>{
+  res.header("Access-Control-Allow-Origin", "*");
+  //console.log(JSON.stringify(req.query['finalsel']))
+  // console.log(req.body)
+  let m=""
+  for (let k in req.body){
+    m=k;
+  }
+  finalsel=m;
+  console.log(m)
+  res.send(req.body)
+  
 })
 
 app.listen(8080)

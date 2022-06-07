@@ -1,3 +1,4 @@
+
 import React,{useContext} from "react";
 import {useNavigate } from "react-router-dom";
 import { browserHistory } from "react-router";
@@ -45,7 +46,7 @@ import axios from 'axios';
   //function to update user selection
   const updateSelection = (event) => {
     //value1 will hold the type of feature eg :language ,framework ect
-        
+    event.preventDefault()
     const value1 = event.target.name
     finalsel[value1]=event.target.id
     setSelected(event.target.id)
@@ -123,7 +124,7 @@ import axios from 'axios';
   
 
 
-  React.useEffect(() => {
+  React.useEffect(()  => {
     if (datadepend !== null && datadepend !== "" && datadepend !== undefined){
       
       //clean data (combine duplicates)
@@ -136,6 +137,7 @@ import axios from 'axios';
       //nested map to navigate through the data and its inner values
       setForm( datadepend.map((e) => 
         { 
+          
           // if the name is aready present in the dictionary we should not repeate it again 
           // example case of framework
           if(e.name in dictionary  ){
@@ -194,6 +196,31 @@ import axios from 'axios';
       ));
     }
   }, [datadepend]);
+  function submit(e){
+    e.preventDefault();
+    let l=['language','build','deploy','framework']
+    
+    let f=0
+    for (let i=0;i<l.length;i++){
+      if(finalsel[l[i]]===''){
+        f=1
+        break
+      }
+    }
+  
+    if(!f){
+      
+      axios.post('http://localhost:8080/create_result',JSON.stringify(finalsel))
+      .then(()=>{console.log("sent the data!")})
+      .catch(err=>{console.error(err)})
+
+      
+      
+      
+      
+    }
+
+  }
   
 
 
@@ -209,11 +236,15 @@ return (
 	}}
 	>
    
-	<form>
+   <form onSubmit={submit}>
+    
 
     {
+      
       form_out
     }
+  
+  <input type="submit" value="Submit" />
    
 	</form>
   
@@ -221,9 +252,4 @@ return (
 	</div>
 );
 };
-  
-  
-
-
-
 export default Home;
