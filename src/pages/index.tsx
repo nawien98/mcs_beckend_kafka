@@ -1,7 +1,9 @@
 import type { NextPage } from "next";
 import Head from "next/head";
+import LoginPage from "./login/Login";
 
 const Home: NextPage = () => {
+ 
   return (
     <>
       <Head>
@@ -12,7 +14,7 @@ const Home: NextPage = () => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div>Home page</div>
+      <div>MicroServices Accelerator</div>   
     </>
   );
 };
