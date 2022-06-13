@@ -1,6 +1,5 @@
 import React,{useContext} from "react";
 import {useNavigate } from "react-router-dom";
-import './Dashboard.css'
 import logo from './AccoliteLogo.png';
 
 import axios from 'axios';
