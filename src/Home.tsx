@@ -5,7 +5,7 @@ import { browserHistory } from "react-router";
 import './Home.css'
 import logo from './AccoliteLogo.png';
 import { useAuth } from "./context/AuthContext";
-import { getDependList,getDepend,createResult} from "./services/HomeService";
+import { getDependList,getDepend,createResult} from "./services/ConfigService";
 
 import axios from 'axios';
 
@@ -67,11 +67,8 @@ function Home() {
   // API call to check if any of the values are present in the dependency
   React.useEffect(()=>{
       
-    getDependList.then((res)=>{
-      
- 
-      setDatadepend( res.data )
-        
+    getDependList(all_depend).then((res)=>{
+      setDatadepend( res.data )   
     })
 
   },[all_depend])
@@ -79,12 +76,11 @@ function Home() {
 
   React.useEffect(()=>{
 
-    axios.get('http://localhost:8080/depend?name='+selected).then((res)=>{
+    getDepend(selected).then((res)=>{
       setData( res.data )
       let n=[]
       
       res.data.map((e)=>{
-       
         n.push(e.name)
         if(finalsel.hasOwnProperty(e.name) && finalsel[e.name]!==''){
           if(!e.values.includes(finalsel[e.name])){
@@ -215,14 +211,10 @@ function Home() {
   
     if(!f){
       
-      axios.post('http://localhost:8080/create_result',JSON.stringify(finalsel))
+      createResult(finalsel)
       .then(()=>{console.log("sent the data!")})
       .catch(err=>{console.error(err)})
 
-      
-      
-      
-      
     }
 
   }
