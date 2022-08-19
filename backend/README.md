@@ -4,6 +4,7 @@
 ### Required
 - Install docker
 - Install maven
+- Install kafka
 - Install `curl` cli(MacOS:https://formulae.brew.sh/formula/curl)
 ```bash
 brew install curl

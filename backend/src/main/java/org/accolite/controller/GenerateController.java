@@ -1,9 +1,11 @@
 package org.accolite.controller;
 
 import org.accolite.exception.FieldEmptyException;
+import org.accolite.interceptor.Logged;
 import org.accolite.model.Task;
 import org.accolite.service.QuarkusService;
 import org.accolite.service.SpringBootService;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.util.Optional;
+
 @Path("/api")
 public class GenerateController {
     private static final Logger logger = LoggerFactory.getLogger(GenerateController.class);
@@ -22,8 +26,11 @@ public class GenerateController {
     QuarkusService quarkusGenerator;
     SpringBootService springGenerator;
 
+
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Logged
 //    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Path("/v1/ms-accelerator/generate")
     public Response generate(Task task) {

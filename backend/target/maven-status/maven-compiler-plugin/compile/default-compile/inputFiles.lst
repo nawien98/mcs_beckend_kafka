@@ -1,0 +1,17 @@
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/kafka/ConsumerRoute.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/service/GreetingService.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/service/SpringBootService.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/interceptor/Logged.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/exception/FieldEmptyException.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/routes/CamelRoute.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/controller/GreetingController.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/service/UserService.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/model/ModelEntity.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/service/QuarkusService.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/controller/GenerateController.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/interceptor/LoggingInterceptor.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/controller/ServiceController.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/controller/UserController.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/model/User.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/routes/UserRoute.java
+/Users/warna/Documenti/projects/backend/ms-accelerator/backend/src/main/java/org/accolite/model/Task.java
