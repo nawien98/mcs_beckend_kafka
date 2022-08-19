@@ -16,6 +16,7 @@ brew install make
 
 ### Run steps
 
+
 [comment]: <> (Step1: Use `make` to execute makefile run mysql in docker)
 
 [comment]: <> (```bash)
@@ -32,9 +33,13 @@ brew install make
 
 [comment]: <> (```)
 
-Step1: Open project in backend folder layer
+Step1: Run Zookeper server
 
-Step2: Use `make` to execute makefile run application
+Step2: Run Kafka environment 
+
+Step3: Open project in backend folder layer
+
+Step4: Use `make` to execute makefile run application
 ```bash
 make run
 ```
@@ -43,7 +48,7 @@ OR  use mvnw command directly
 ./mvnw compile quarkus:dev
 ```
 
-Step3: Use `curl` to call API
+Step5: Use `curl` to call API
 ```bash
 curl -X POST http://localhost:8080/api/v1/ms-accelerator/generate \
 -H "Content-Type: application/json" \
@@ -65,6 +70,7 @@ curl -X POST http://localhost:8080/api/v1/ms-accelerator/generate \
 }'
 ```
 Swagger: http://localhost:8080/swagger-ui
+
 
 ### Packaging and running the application
 
