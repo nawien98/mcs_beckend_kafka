@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report.md</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="kafka-progress-report">Kafka progress report</h1>
+<p>Following to what have been discussed, it was set up a plan of deliverables to be showcased by the end of the week for two weeks.</p>
+<ol>
+<li>Week one:
+<ul>
+<li>Set up Apache Kafka - with test topic</li>
+<li>Be able to perform health checks</li>
+<li>Configure Quarkus plugin for Kafka</li>
+</ul>
+</li>
+<li>Week two:
+<ul>
+<li>Send and consume messages to/from test topic</li>
+<li>Be able to check if the message is received or placed</li>
+<li>Demo</li>
+</ul>
+</li>
+</ol>
+<h2 id="week-one">Week one</h2>
+<h3 id="set-up-apache-kafka---with-test-topic">Set up Apache Kafka - with test topic</h3>
+<p>First step we have to download and extract the latest <a href="https://www.apache.org/dyn/closer.cgi?path=/kafka/3.2.1/kafka_2.13-3.2.1.tgz">Kafka release</a>.<br>
+Using the terminal we will moving into the extracted Kafka files.<br>
+Then we have to run the required <strong>Zookeeper</strong>, in order to do that we will have to run the following command:</p>
+<pre><code>$ bin/zookeeper-server-start.sh config/zookeeper.properties
+</code></pre>
+<p>Once the Zookeeper server is up and running it is now possible to run the <strong>Kafka</strong> environment by using this command on a new terminal:</p>
+<pre><code>$ bin/kafka-server-start.sh config/server.properties
+</code></pre>
+<p>We could now start using our set up Apache Kafka by trying to create a topic we can do that by executing this command:</p>
+<pre><code>$ bin/kafka-topics.sh --create --topic test-topic --bootstrap-server localhost:9092
+</code></pre>
+<p>Now that our environment is been successfully set up and we have created our topic are ready to perform some essential health checks.</p>
+<h3 id="be-able-to-perform-health-checks">Be able to perform health checks</h3>
+<p>We have different ways to perform health checks on our environment one of the most notorious way to monitor is by using Grafana that will allow us to live showcase and display the majority of the information starting from the topics followed by the different partitions up to the point that we are able to visualise the logs of the different consumers. Those type of information are gathered and displayed on those graphs by linking different data.<br>
+By using our terminal we can visualise some basic information, for example we could visualise that our Kafka environment will throw errors if the Zookeeper Server is down.<br>
+One way that we could check if the Kafka environment is running will be by trying to create a topic that will show that the broker my not be available.<br>
+To understand if the topic we are creating has been added successfully we can check that by running this command:</p>
+<pre><code>$ bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+</code></pre>
+<p>We currently haven’t created a complex topic with different partition but if we want to have specific information on the topic we did create we can run:</p>
+<pre><code>$ bin/kafka-topics.sh --describe --topic test-topic --bootstrap-server localhost:9092
+</code></pre>
+<p>One final check that we can bring on is the consumer/producer test. On one terminal we can have a console with the<br>
+consumer up running (read):</p>
+<pre><code>$ bin/kafka-console-consumer.sh --topic test-topic --from-beginning --bootstrap-server localhost:9092
+</code></pre>
+<p>and the producer (write) in the other terminal:</p>
+<pre><code>$ bin/kafka-console-producer.sh --topic test-topic --bootstrap-server localhost:9092
+</code></pre>
+<p>by writing in this our last terminal we should be able to see on the consumer console the latest messages.</p>
+<p>More relevant, to our project once we implement Kafka on Quarkus with the dependencies and the corresponding routes, Apache Kafka does become and essential environment for the project to start with therefore we will have on our log displayed if the connection hasn’t taken place. As previously we have been handling the log events and we have changed its level to: TRACE.</p>
+<h3 id="configure-quarkus-plugin-for-kafka">Configure Quarkus plugin for Kafka</h3>
+<p>To configure it with the existing Microservices project there were few basic steps we had to follow, as we are working in local with the predefined ports we didn’t had the necessity to specify any ports on the properties. In order to define the dependencies we did alter the pom.xml file by adding :</p>
+<pre><code> &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.quarkus.platform&lt;/groupId&gt;
+            &lt;artifactId&gt;quarkus-bom&lt;/artifactId&gt;
+            &lt;version&gt;${quarkus.platform.version}&lt;/version&gt;
+            &lt;type&gt;pom&lt;/type&gt;
+            &lt;scope&gt;import&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+            &lt;artifactId&gt;camel-quarkus-bom&lt;/artifactId&gt;
+            &lt;version&gt;${camel-quarkus.version}&lt;/version&gt;
+            &lt;type&gt;pom&lt;/type&gt;
+            &lt;scope&gt;import&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;camel-quarkus-bean&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;camel-quarkus-direct&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;camel-quarkus-jackson&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;camel-quarkus-rest&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;camel-quarkus-jpa&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-smallrye-reactive-messaging-kafka&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.camel.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;camel-quarkus-kafka&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+</code></pre>
+<p>The initial dependencies we have are Apache Camel oriented and those will help us in defining in the following section the routes the response/request and make the to/from approach possible.</p>
+<p>The second last dependency help us perform a more accurate health check than our manual testing we have provided previously, to accomplish that goal we had to alter our application.property file and setting to true <code>quarkus.kafka.health.enabled</code>, the command to be used on our terminal is:</p>
+<pre class=" language-bash"><code class="prism  language-bash">$ curl localhost:8080/q/health
+</code></pre>
+<p>By adding the last dependency we are able to perform as a Producer to reports the event as messages on the predefined topic which in our case we decided to continue by using topic-test.</p>
+<h2 id="week-two">Week two</h2>
+<h3 id="send-and-consume-messages-tofrom-test-topic">Send and consume messages to/from test topic</h3>
+<p>Followed by the setting up we are now able to create on the project the producer that will be sending the request flows of the User to Apache Kafka. To make it inherent to our project it was established that we will try to write for the four CRUD operations: create/get/update/delete user.<br>
+We should start by describing the Apache approach that will be used to define the routes and to manage the request. <a href="https://github.com/nawien98/mcs_beckend_kafka/blob/main/backend/src/main/java/org/accolite/kafka/UserRoute.java">Code</a> available on git.<br>
+We will start by defining the class UserRoute and applying routes and linking them to where they should be redirected:</p>
+<pre class=" language-bash"><code class="prism  language-bash">    rest<span class="token punctuation">(</span><span class="token string">"/user"</span><span class="token punctuation">)</span>
+        .get<span class="token punctuation">(</span><span class="token string">"/all"</span><span class="token punctuation">)</span>
+            .to<span class="token punctuation">(</span><span class="token string">"direct:getUsers"</span><span class="token punctuation">)</span>
+        .get<span class="token punctuation">(</span><span class="token string">"/{id}"</span><span class="token punctuation">)</span>
+            .to<span class="token punctuation">(</span><span class="token string">"direct:getUser"</span><span class="token punctuation">)</span>
+        .post<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            .type<span class="token punctuation">(</span>User.class<span class="token punctuation">)</span>
+            .to<span class="token punctuation">(</span><span class="token string">"direct:addUser"</span><span class="token punctuation">)</span>
+        .delete<span class="token punctuation">(</span><span class="token string">"/{id}"</span><span class="token punctuation">)</span>
+            .to<span class="token punctuation">(</span><span class="token string">"direct:removeUser"</span><span class="token punctuation">)</span>
+        .put<span class="token punctuation">(</span><span class="token string">"/{id}"</span><span class="token punctuation">)</span>
+            .type<span class="token punctuation">(</span>User.class<span class="token punctuation">)</span>
+            .to<span class="token punctuation">(</span><span class="token string">"direct:updateUser"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>At this point we have the inner class handling of those redirecting we will start with the most simple which is the creation followed by the deletion:</p>
+<pre class=" language-bash"><code class="prism  language-bash">    // creation
+    from<span class="token punctuation">(</span><span class="token string">"direct:addUser"</span><span class="token punctuation">)</span>
+        .to<span class="token punctuation">(</span><span class="token string">"jpa://"</span>+User.class.getName<span class="token punctuation">(</span><span class="token punctuation">)</span>+<span class="token string">"?usePersist=true"</span><span class="token punctuation">)</span>
+        .setBody<span class="token punctuation">(</span>simple<span class="token punctuation">(</span><span class="token string">"User <span class="token variable">${body.id}</span>:<span class="token variable">${body.name}</span> added successfully"</span><span class="token punctuation">))</span>
+        .to<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    // delete
+    from<span class="token punctuation">(</span><span class="token string">"direct:removeUser"</span><span class="token punctuation">)</span>
+        .toD<span class="token punctuation">(</span><span class="token string">"jpa://"</span>+User.class.getName<span class="token punctuation">(</span><span class="token punctuation">)</span>+<span class="token string">"?nativeQuery=DELETE FROM users WHERE id = <span class="token variable">${header.id}</span>&amp;useExecuteUpdate=true"</span><span class="token punctuation">)</span>
+        .setBody<span class="token punctuation">(</span>simple<span class="token punctuation">(</span><span class="token string">"Deleted user with id: <span class="token variable">${header.id}</span>"</span><span class="token punctuation">))</span>
+        .to<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>We are using JPA (which might need the <a href="https://camel.apache.org/camel-quarkus/2.11.x/reference/extensions/jpa.html">dependency</a> if not yet imported) to communicate with our SQL server and we are then creating the body of the message that we are sanding to KAFKA in which we do define the topic and the broker at the end.</p>
+<p>We are now left with the GET and PUT operations and we would like to handle some possible errors which will be a wrong id for example.</p>
+<pre class=" language-bash"><code class="prism  language-bash">    // GET request
+    from<span class="token punctuation">(</span><span class="token string">"direct:getUser"</span><span class="token punctuation">)</span>
+        .toD<span class="token punctuation">(</span><span class="token string">"jpa://"</span>+User.class.getName<span class="token punctuation">(</span><span class="token punctuation">)</span>+<span class="token string">"?query=SELECT u FROM "</span> + userPath +<span class="token string">" u WHERE u.id= <span class="token variable">${header.id}</span>"</span>,5<span class="token punctuation">)</span>
+        .choice<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            .when<span class="token punctuation">(</span><span class="token punctuation">)</span>.simple<span class="token punctuation">(</span><span class="token string">"<span class="token variable">${body}</span> == '[]'"</span><span class="token punctuation">)</span>
+                .setBody<span class="token punctuation">(</span>simple<span class="token punctuation">(</span><span class="token string">"User with id: <span class="token variable">${header.id}</span> not found"</span><span class="token punctuation">))</span>
+                .to<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span>
+            .otherwise<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                .setBody<span class="token punctuation">(</span>simple<span class="token punctuation">(</span><span class="token string">"Found User <span class="token variable">${header.id}</span>:<span class="token variable">${body[0].name}</span>"</span><span class="token punctuation">))</span>
+                .to<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    // UPDATE request
+    from<span class="token punctuation">(</span><span class="token string">"direct:updateUser"</span><span class="token punctuation">)</span>
+         .toD<span class="token punctuation">(</span><span class="token string">"jpa://"</span>+User.class.getName<span class="token punctuation">(</span><span class="token punctuation">)</span>+<span class="token string">"?nativeQuery=UPDATE users SET name = '<span class="token variable">${body.name}</span>' WHERE id = <span class="token variable">${header.id}</span>&amp;useExecuteUpdate=true"</span><span class="token punctuation">)</span>
+         .choice<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            .when<span class="token punctuation">(</span><span class="token punctuation">)</span>.simple<span class="token punctuation">(</span><span class="token string">"<span class="token variable">${body}</span> == 0"</span><span class="token punctuation">)</span>
+                .setBody<span class="token punctuation">(</span>simple<span class="token punctuation">(</span><span class="token string">"No such user with id: <span class="token variable">${header.id}</span>"</span><span class="token punctuation">))</span>
+                .to<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span>
+            .otherwise<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                .setBody<span class="token punctuation">(</span>simple<span class="token punctuation">(</span><span class="token string">"Updated user with id: <span class="token variable">${body}</span>"</span><span class="token punctuation">))</span>
+                .to<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>To test this new implementations we have to make sure that Kafka environment is up and running, we could use Postman to make our request as well as curl command line request and visualise the output on our terminal. By the end of this steps we should be able to establish a connection with Kafka and to also set up the producer that delivers the desired message to a topic of our choice.<br>
+Next we would like to make sure that those message have been placed, to do so we will write the code for the consumer.</p>
+<h3 id="be-able-to-check-if-the-message-is-received-or-placed">Be able to check if the message is received or placed</h3>
+<p>To facilitate ourselves we will be using the same project to create our Consumer, a common pattern is to have multiple consumers fetching from different partitions. Kafka’s goal is to decentralise this type of events and to monitor the realtime pipeline built as well storing both historical data. In our case we will be delivering under the same project by using this <a href="https://github.com/nawien98/mcs_beckend_kafka/blob/main/backend/src/main/java/org/accolite/kafka/ConsumerRoute.java">code</a>:</p>
+<pre class=" language-bash"><code class="prism  language-bash">    @Override
+    public void configure<span class="token punctuation">(</span><span class="token punctuation">)</span> throws Exception <span class="token punctuation">{</span>
+        from<span class="token punctuation">(</span><span class="token string">"kafka:test-topic?brokers=localhost:9092"</span><span class="token punctuation">)</span>.routeId<span class="token punctuation">(</span>KAFKA_ROUTE_NAME<span class="token punctuation">)</span>
+                .log<span class="token punctuation">(</span><span class="token string">"Message: <span class="token variable">${body}</span>  received on the topic: <span class="token variable">${headers[kafka.TOPIC]}</span> "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre>
+<p>We could think about this code as a listener as whenever a message hits the topic we are simply pulling out of it the latest message and displaying on our project logs. This allow us to understand whether a producer has made any sorts of request from anywhere, and to store them. In a more complex usage we could think about monetary transactions and the realtime pipeline we could create the the request queuing and to store the request flow. The use of several partitions on different brokers makes the distributed environment possible and provides us with a flawless experience.</p>
+<h3 id="demo">Demo</h3>
+<p>We have come to a certain end and I will be using this section more like a deployment guideline document so that could be used to reference and start up the <a href="https://github.com/nawien98/mcs_beckend_kafka/tree/main/backend">project</a>.<br>
+The project has been pushed into a repository and the altered sections could be found in the backend folder.</p>
+<h4 id="how-to-run-in-local">How to run in local</h4>
+<h5 id="required">Required:</h5>
+<ul>
+<li>Install Docker</li>
+<li>Install Maven</li>
+<li>Install Kafka</li>
+<li>Install <code>curl</code> cli(MacOS:<a href="https://formulae.brew.sh/formula/curl">https://formulae.brew.sh/formula/curl</a>)</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash">brew <span class="token function">install</span> curl
+</code></pre>
+<ul>
+<li>Install <code>make</code> cli(MacOS:<a href="https://formulae.brew.sh/formula/make">https://formulae.brew.sh/formula/make</a>)</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash">brew <span class="token function">install</span> <span class="token function">make</span>
+</code></pre>
+<h5 id="run-steps">Run steps</h5>
+<p>Step1: Run Zookeper server</p>
+<p>Step2: Run Kafka environment</p>
+<p>Step3: Use <code>make</code> to execute makefile run application</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token function">make</span> run
+</code></pre>
+<p>OR use mvnw command directly</p>
+<pre><code>./mvnw compile quarkus:dev
+</code></pre>
+<p>Step4: Use <code>curl</code> to call API</p>
+<p>CREATE</p>
+<pre class=" language-bash"><code class="prism  language-bash">curl -X POST http://localhost:8080/api/kafka/user \
+-H <span class="token string">"Content-Type: application/json"</span> \
+-d <span class="token string">'{
+   "name":"Kaf"
+	}'</span>
+</code></pre>
+<p>GET</p>
+<pre class=" language-bash"><code class="prism  language-bash">curl -X GET http://localhost:8080/api/kafka/user/1
+</code></pre>
+<p>UPDATE</p>
+<pre class=" language-bash"><code class="prism  language-bash">curl -X PUT http://localhost:8080/api/kafka/user/1 \
+-H <span class="token string">"Content-Type: application/json"</span> \
+-d <span class="token string">'{
+    "name":"Kafka"
+    }'</span>
+</code></pre>
+<p>DELETE</p>
+<pre class=" language-bash"><code class="prism  language-bash">curl -X DELETE http://localhost:8080/api/kafka/user/1
+</code></pre>
+</div>
+</body>
+
+</html>
