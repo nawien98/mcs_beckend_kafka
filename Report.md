@@ -228,8 +228,8 @@ Step4: Use `curl` to call API
 curl -X POST http://localhost:8080/api/kafka/user \
 -H "Content-Type: application/json" \
 -d '{  
-	 "name":"Kaf"
-	 }'
+    "name":"Kaf"
+	}'
  ```
  GET 
  ```bash
@@ -240,8 +240,8 @@ curl -X GET http://localhost:8080/api/kafka/user/1
 curl -X PUT http://localhost:8080/api/kafka/user/1 \
 -H "Content-Type: application/json" \
 -d '{  
-	 "name":"Kafka"
-	 }'
+    "name":"Kafka"
+	}'
  ```
  DELETE
 ```bash
