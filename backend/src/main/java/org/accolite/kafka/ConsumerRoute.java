@@ -1,14 +1,13 @@
 package org.accolite.kafka;
 
 
-import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConsumerRoute extends RouteBuilder {
 
-    public static final String KAFKA_ROUTE_NAME = "kafka-route";
+    public static final String KAFKA_ROUTE_NAME = "kafka-consumer";
 
     @Override
     public void configure() throws Exception {

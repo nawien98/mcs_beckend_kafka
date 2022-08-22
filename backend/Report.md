@@ -113,7 +113,7 @@ To configure it with the existing Microservices project there were few basic ste
 
 The initial dependencies we have are Apache Camel oriented and those will help us in defining in the following section the routes the response/request and make the to/from approach possible.
 
-The second last dependency help us perform a more accurate health check than our manual testing we have provided previously, to accomplish that goal we had to alter our application.property file and setting to true `quarkus.kafka.health.enabled`, the command to be used on our terminal is:
+The second last dependency help us perform a more accurate health check than our manual testing we have provided previously, to accomplish that goal we had to alter our application.property file and setting to **true** `quarkus.kafka.health.enabled`, the command to be used on our terminal is:
 
 ```Bash
     $ curl localhost:8080/q/health

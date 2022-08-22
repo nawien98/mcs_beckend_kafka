@@ -20,7 +20,7 @@ public class LoggingInterceptor {
     Object logInvocation(InvocationContext context) throws Exception {
         logger.info(context.getMethod()+" has started execution.");
         Object ret = context.proceed();
-        logger.info(context.getMethod().getName()+" finished execution");
+        logger.info(context.getMethod()+" finished execution");
         return ret;
     }
 

@@ -1,11 +1,12 @@
-package org.accolite.controller;
+package org.accolite.kafka;
 
 import org.accolite.model.User;
-import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.sql.Timestamp;
 
 @Component
 public class UserRoute extends RouteBuilder {
@@ -15,11 +16,14 @@ public class UserRoute extends RouteBuilder {
 
         // URI specifying topic and broker
         String kafkaUri = "kafka:test-topic?brokers=localhost:9092";
+        // User class project path
         String userPath = User.class.getName();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
 
         restConfiguration().bindingMode(RestBindingMode.json);
 
-        rest("/user")
+        rest("api/kafka/user")
                 .get("/all")
                     .to("direct:getUsers")
                 .get("/{id}")
@@ -41,24 +45,33 @@ public class UserRoute extends RouteBuilder {
         // handling single user request by ID
         from("direct:getUser")
                 .toD("jpa://"+userPath+"?query=SELECT u FROM " + userPath +" u WHERE u.id= ${header.id}",5)
+                .log("some ${header.request}")
                 .choice()
                     .when().simple("${body} == '[]'")
-                        .setBody(simple("User ${header.id} not found"))
+                        .setBody(simple(String.format("{'event':'GET', 'status':'%s', 'message':'User not found', " +
+                                "'user':{'id': ${header.id}}, 'timestamp': %s }",
+                                "FAIL", timestamp)))
                         .to(kafkaUri)
                     .otherwise()
-                        .setBody(simple("Found User ${header.id}:${body[0].name}"))
+                        .setBody(simple(String.format("{'event':'GET', 'status':'%s', 'message':'User found', " +
+                                "'user':{'id': ${body[0].id}, 'name' : '${body[0].name}'}, 'timestamp': %s }",
+                                "SUCCESS", timestamp)))
                         .to(kafkaUri);
 
         // handling user creation
         from("direct:addUser")
                 .to("jpa://"+userPath+"?usePersist=true")
-                .setBody(simple("User ${body.id}:${body.name} added successfully"))
+                .setBody(simple(String.format("{'event':'POST', 'status':'%s', 'message':'User added', " +
+                                "'user':{'id': ${body.id}, 'name' : '${body.name}'}, 'timestamp': %s }",
+                                "SUCCESS", timestamp)))
                 .to(kafkaUri);
 
         // removing existing user
         from("direct:removeUser")
                 .toD("jpa://"+userPath+"?nativeQuery=DELETE FROM users WHERE id = ${header.id}&useExecuteUpdate=true")
-                .setBody(simple("Deleted user with id: ${header.id}"))
+                .setBody(simple(String.format("{'event':'DELETE', 'status':'%s', 'message':'User deleted', " +
+                                "'user':{'id': ${header.id}}, 'timestamp': %s }",
+                                "SUCCESS", timestamp)))
                 .to(kafkaUri);
 
         // updating existing user
@@ -66,10 +79,14 @@ public class UserRoute extends RouteBuilder {
                 .toD("jpa://"+userPath+"?nativeQuery=UPDATE users SET name = '${body.name}' WHERE id = ${header.id}&useExecuteUpdate=true")
                 .choice()
                 .when().simple("${body} == 0")
-                    .setBody(simple("No such user with id: ${header.id}"))
+                    .setBody(simple(String.format("{'event':'PUT', 'status':'%s', 'message':'User not found', " +
+                                    "'user':{'id': ${header.id}}, 'timestamp': %s }",
+                                    "FAIL", timestamp)))
                     .to(kafkaUri)
                 .otherwise()
-                    .setBody(simple("Updated user with id: ${body}"))
+                    .setBody(simple(String.format("{'event':'PUT', 'status':'%s', 'message':'User updated', " +
+                                    "'user':{'id': ${header.id}}, 'timestamp': %s }",
+                                    "SUCCESS", timestamp)))
                     .to(kafkaUri);
 
     }
